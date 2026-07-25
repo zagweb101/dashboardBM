@@ -1,14 +1,14 @@
 "use client";
 
 /**
- * Dialog / Sheet — إصلاح التمرير (flex + min-h-0)
+ * Dialog — Header ثابت + Body مرن (min-h-0) + Footer اختياري
  *
  * الهيكل:
  *   overlay
  *     panel (flex-col · ارتفاع محدود · overflow-hidden)
  *       handle (موبايل)
  *       header (shrink-0)
- *       body   (flex-1 · min-h-0 · flex-col · overflow-hidden) ← FormShell هنا
+ *       body   (flex-1 · min-h-0 · flex-col · overflow-hidden)
  *       footer (shrink-0 · اختياري)
  */
 import {
@@ -68,11 +68,12 @@ export function Dialog({
     };
     window.addEventListener("keydown", onKeyDown);
 
+    // ركّز زر الإغلاق فقط — لا تقفز لمدخل قد يمرّر المحتوى لأسفل
     const timer = window.setTimeout(() => {
-      const focusable = panelRef.current?.querySelector<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      const closeBtn = panelRef.current?.querySelector<HTMLElement>(
+        '[data-dialog-close="true"]',
       );
-      focusable?.focus();
+      closeBtn?.focus();
     }, 0);
 
     return () => {
@@ -93,7 +94,6 @@ export function Dialog({
       className={cn(
         "fixed inset-0 z-[80] flex justify-center",
         "bg-slate-900/40 backdrop-blur-[3px] dark:bg-black/55",
-        // موبايل: تمدد كامل | ديسكتوب: توسيط
         "items-stretch p-0",
         "sm:items-center sm:p-4 sm:py-6",
       )}
@@ -107,19 +107,17 @@ export function Dialog({
         aria-labelledby={titleId}
         aria-describedby={description ? descriptionId : undefined}
         className={cn(
-          // ★ مهم: flex-col + overflow-hidden + ارتفاع محدود
           "flex w-full min-h-0 flex-col overflow-hidden",
           "border-border bg-card text-card-foreground shadow-[var(--shadow-hover)]",
           "animate-in fade-in duration-200",
 
-          // full: ارتفاع محدود صريح → FormShell يتمكن من التمرير
           mobile === "full" && [
+            // ارتفاع صريح → body + FormShell يتمكنان من flex-1 + overflow
             "h-[100dvh] max-h-[100dvh] rounded-none border-0",
             "sm:h-[min(90dvh,880px)] sm:max-h-[min(90dvh,880px)]",
             "sm:rounded-2xl sm:border",
           ],
 
-          // sheet: للمحتوى القصير (تأكيد) — max-height فقط بدون إجبار ارتفاع فارغ
           mobile === "sheet" && [
             "mt-auto max-h-[min(92dvh,640px)] rounded-t-3xl border border-b-0",
             "sm:mt-0 sm:max-h-[min(85dvh,520px)] sm:rounded-2xl sm:border",
@@ -157,6 +155,7 @@ export function Dialog({
           </div>
           <button
             type="button"
+            data-dialog-close="true"
             onClick={() => onOpenChange(false)}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition hover:bg-muted hover:text-foreground active:scale-95"
             aria-label="Close"
@@ -166,14 +165,13 @@ export function Dialog({
         </header>
 
         {/*
-          Body: منطقة مرنة — min-h-0 ضروري لتمرير الأبناء
-          overflow-hidden هنا (ليس على الـ scroll الداخلي) حتى FormShell يتحكم بالتمرير
+          Body: flex-1 + min-h-0 حتى FormShell يتمكن من التمرير
+          overflow-hidden يمنع قصّ المحتوى خارج المنطقة المرنة
         */}
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {children}
         </div>
 
-        {/* Footer خارجي (ConfirmDialog وغيرها) */}
         {footer ? (
           <footer
             className={cn(

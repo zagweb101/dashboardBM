@@ -136,6 +136,15 @@ export function StudentForm({
         </FormAlert>
       ) : null}
 
+      {/*
+        ترتيب الحقول:
+        1) الاسم + الجوال
+        2) البريد + الحالة
+        3) المستوى + مصدر التسجيل
+        4) تفاصيل إضافية (جنس، مدينة، …)
+        5) جهة اتصال الطوارئ
+        6) الملاحظات (عرض كامل)
+      */}
       <FormSection
         title={ar ? "البيانات الأساسية" : "Basic info"}
         description={
@@ -145,6 +154,7 @@ export function StudentForm({
         }
       >
         <FormGrid>
+          {/* الصف 1: الاسم الكامل + رقم الجوال */}
           <Input
             name="fullName"
             label={t("fullName")}
@@ -153,18 +163,6 @@ export function StudentForm({
             error={fieldError("fullName")}
             placeholder={ar ? "الاسم الثلاثي" : "Full name"}
             autoComplete="name"
-          />
-          <Input
-            name="email"
-            type="email"
-            label={t("email")}
-            required
-            defaultValue={student?.email}
-            error={fieldError("email")}
-            placeholder="name@example.com"
-            dir="ltr"
-            className="text-start"
-            autoComplete="email"
           />
           <Input
             name="phone"
@@ -178,49 +176,19 @@ export function StudentForm({
             inputMode="tel"
             autoComplete="tel"
           />
+
+          {/* الصف 2: البريد + الحالة */}
           <Input
-            name="nationalId"
-            label={t("nationalId")}
-            defaultValue={student?.nationalId}
-            error={fieldError("nationalId")}
-            placeholder="1xxxxxxxxx"
+            name="email"
+            type="email"
+            label={t("email")}
+            required
+            defaultValue={student?.email}
+            error={fieldError("email")}
+            placeholder="name@example.com"
             dir="ltr"
             className="text-start"
-            inputMode="numeric"
-          />
-        </FormGrid>
-      </FormSection>
-
-      <FormSection title={ar ? "التفاصيل" : "Details"}>
-        <FormGrid>
-          <Select
-            name="gender"
-            label={t("gender")}
-            required
-            defaultValue={student?.gender ?? "male"}
-            options={genderOptions}
-            error={fieldError("gender")}
-          />
-          <Input
-            name="dateOfBirth"
-            type="date"
-            label={t("dateOfBirth")}
-            defaultValue={student?.dateOfBirth}
-            error={fieldError("dateOfBirth")}
-          />
-          <Input
-            name="city"
-            label={t("city")}
-            required
-            defaultValue={student?.city}
-            error={fieldError("city")}
-            placeholder={ar ? "جدة" : "Jeddah"}
-          />
-          <Input
-            name="address"
-            label={t("address")}
-            defaultValue={student?.address}
-            error={fieldError("address")}
+            autoComplete="email"
           />
           <Select
             name="status"
@@ -229,6 +197,8 @@ export function StudentForm({
             options={statusOptions}
             error={fieldError("status")}
           />
+
+          {/* الصف 3: المستوى + مصدر التسجيل */}
           <Select
             name="level"
             label={t("level")}
@@ -243,11 +213,71 @@ export function StudentForm({
             options={sourceOptions}
             error={fieldError("source")}
           />
+        </FormGrid>
+      </FormSection>
+
+      <FormSection title={ar ? "تفاصيل إضافية" : "More details"}>
+        <FormGrid>
+          <Select
+            name="gender"
+            label={t("gender")}
+            required
+            defaultValue={student?.gender ?? "male"}
+            options={genderOptions}
+            error={fieldError("gender")}
+          />
+          <Input
+            name="city"
+            label={t("city")}
+            required
+            defaultValue={student?.city}
+            error={fieldError("city")}
+            placeholder={ar ? "جدة" : "Jeddah"}
+          />
+          <Input
+            name="dateOfBirth"
+            type="date"
+            label={t("dateOfBirth")}
+            defaultValue={student?.dateOfBirth}
+            error={fieldError("dateOfBirth")}
+          />
+          <Input
+            name="nationalId"
+            label={t("nationalId")}
+            defaultValue={student?.nationalId}
+            error={fieldError("nationalId")}
+            placeholder="1xxxxxxxxx"
+            dir="ltr"
+            className="text-start"
+            inputMode="numeric"
+          />
+          <FormFull>
+            <Input
+              name="address"
+              label={t("address")}
+              defaultValue={student?.address}
+              error={fieldError("address")}
+              placeholder={ar ? "الحي، الشارع..." : "District, street..."}
+            />
+          </FormFull>
+        </FormGrid>
+      </FormSection>
+
+      <FormSection
+        title={ar ? "جهة الاتصال الطارئ" : "Emergency contact"}
+        description={
+          ar
+            ? "يُستخدم عند الحاجة للتواصل السريع"
+            : "Used when urgent contact is needed"
+        }
+      >
+        <FormGrid>
           <Input
             name="emergencyContactName"
             label={t("emergencyContactName")}
             defaultValue={student?.emergencyContactName}
             error={fieldError("emergencyContactName")}
+            placeholder={ar ? "اسم جهة الاتصال" : "Contact name"}
           />
           <Input
             name="emergencyContactPhone"
@@ -266,9 +296,10 @@ export function StudentForm({
         <FormFull>
           <Textarea
             name="notes"
+            label={ar ? "ملاحظات داخلية" : "Internal notes"}
             defaultValue={student?.notes}
             error={fieldError("notes")}
-            rows={3}
+            rows={4}
             placeholder={
               ar
                 ? "ملاحظات داخلية عن المتدرب..."
