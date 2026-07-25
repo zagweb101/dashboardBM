@@ -21,20 +21,26 @@ export function ChartCard({
   return (
     <section
       className={cn(
-        "flex h-full flex-col rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-soft)]",
+        "flex h-full min-w-0 flex-col rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-soft)] sm:p-5",
         className,
       )}
     >
-      <header className="mb-4 flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-base font-bold text-card-foreground">{title}</h3>
+      <header className="mb-4 flex min-w-0 items-start justify-between gap-3">
+        <div className="min-w-0 space-y-1">
+          <h3 className="text-base font-bold leading-snug text-card-foreground break-words">
+            {title}
+          </h3>
           {description ? (
-            <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+            <p className="text-sm leading-6 text-muted-foreground break-words">
+              {description}
+            </p>
           ) : null}
         </div>
-        {action}
+        {action ? <div className="shrink-0">{action}</div> : null}
       </header>
-      <div className={cn("min-h-0 flex-1", bodyClassName)}>{children}</div>
+      <div className={cn("min-h-0 min-w-0 flex-1", bodyClassName)}>
+        {children}
+      </div>
     </section>
   );
 }

@@ -35,19 +35,21 @@ export function NotificationCard({
             )}
           >
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-card-foreground">
+              <div className="min-w-0 flex-1 space-y-1">
+                <p className="text-sm font-semibold leading-snug text-card-foreground break-words">
                   {item.title}
                 </p>
-                <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">
+                <p className="line-clamp-2 text-xs leading-5 text-muted-foreground">
                   {item.description}
                 </p>
               </div>
               {item.unread ? (
-                <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
               ) : null}
             </div>
-            <p className="mt-2 text-[11px] text-muted-foreground">{item.time}</p>
+            <p className="mt-2 text-[11px] tabular-nums text-muted-foreground" dir="auto">
+              {item.time}
+            </p>
           </li>
         ))}
       </ul>

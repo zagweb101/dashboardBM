@@ -22,35 +22,48 @@ import {
 } from "@/data/dashboard";
 import type { PaymentRow, UserRow } from "@/types/dashboard";
 import { requirePermission } from "@/lib/auth/session";
+import { PageHeader } from "@/components/ui/page-header";
 
 export const metadata: Metadata = {
-  title: "Dashboard",
+  title: "لوحة التحكم",
 };
 
 const paymentColumns: Column<PaymentRow>[] = [
   {
     key: "customer",
-    header: "Customer",
-    cell: (row) => row.customer,
+    header: "العميل",
+    cell: (row) => (
+      <span className="font-semibold break-words">{row.customer}</span>
+    ),
   },
   {
     key: "amount",
-    header: "Amount",
-    cell: (row) => <span className="font-semibold">{row.amount}</span>,
+    header: "المبلغ",
+    cell: (row) => (
+      <span className="font-bold tabular-nums" dir="auto">
+        {row.amount}
+      </span>
+    ),
   },
   {
     key: "method",
-    header: "Method",
-    cell: (row) => row.method,
+    header: "الطريقة",
+    cell: (row) => (
+      <span className="text-muted-foreground">{row.method}</span>
+    ),
   },
   {
     key: "date",
-    header: "Date",
-    cell: (row) => row.date,
+    header: "التاريخ",
+    cell: (row) => (
+      <span className="tabular-nums text-muted-foreground" dir="auto">
+        {row.date}
+      </span>
+    ),
   },
   {
     key: "status",
-    header: "Status",
+    header: "الحالة",
     cell: (row) => <StatusBadge status={row.status} />,
   },
 ];
@@ -58,38 +71,48 @@ const paymentColumns: Column<PaymentRow>[] = [
 const userColumns: Column<UserRow>[] = [
   {
     key: "name",
-    header: "User",
+    header: "المستخدم",
     cell: (row) => (
-      <div>
-        <p className="font-semibold">{row.name}</p>
-        <p className="text-xs text-muted-foreground">{row.email}</p>
+      <div className="min-w-0 space-y-0.5">
+        <p className="font-semibold leading-snug break-words">{row.name}</p>
+        <p
+          className="truncate text-xs text-muted-foreground"
+          dir="ltr"
+          title={row.email}
+        >
+          {row.email}
+        </p>
       </div>
     ),
   },
   {
     key: "role",
-    header: "Role",
-    cell: (row) => row.role,
+    header: "الدور",
+    cell: (row) => <span className="whitespace-nowrap">{row.role}</span>,
   },
   {
     key: "joinedAt",
-    header: "Joined",
-    cell: (row) => row.joinedAt,
+    header: "الانضمام",
+    cell: (row) => (
+      <span className="tabular-nums text-muted-foreground" dir="auto">
+        {row.joinedAt}
+      </span>
+    ),
   },
   {
     key: "status",
-    header: "Status",
+    header: "الحالة",
     cell: (row) => <StatusBadge status={row.status} />,
   },
 ];
 
-function ViewAllLink({ href }: { href: string }) {
+function ViewAllLink({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
       className="rounded-xl border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground transition hover:border-primary/30 hover:text-foreground"
     >
-      View all
+      {label}
     </Link>
   );
 }
@@ -99,7 +122,13 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <PageHeader
+        title="لوحة التحكم"
+        description="نظرة عامة على أداء المركز والإيرادات والنشاط."
+      />
+
+      {/* بطاقات — شبكة تمنع الضغط على الشاشات الضيقة */}
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
         {statsCards.map((stat) => {
           const Icon = stat.icon;
           return (
@@ -116,52 +145,53 @@ export default async function DashboardPage() {
         })}
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-3">
+      <section className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <ChartCard
-          title="Revenue mix"
-          description="Income sources this month"
-          className="xl:col-span-1"
+          title="مزيج الإيرادات"
+          description="مصادر الدخل هذا الشهر"
+          className="min-w-0 xl:col-span-1"
+          bodyClassName="pt-1"
         >
           <DonutChart data={donutData} />
         </ChartCard>
 
         <ChartCard
-          title="Revenue & profit"
-          description="Monthly comparison (last 6 months)"
-          className="xl:col-span-2"
+          title="الإيرادات والأرباح"
+          description="مقارنة شهرية (آخر 6 أشهر)"
+          className="min-w-0 xl:col-span-2"
         >
           <RevenueBarChart data={barData} />
         </ChartCard>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-3">
+      <section className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <ChartCard
-          title="User activity"
-          description="Users and sessions this week"
-          className="xl:col-span-2"
+          title="نشاط المستخدمين"
+          description="المستخدمون والجلسات هذا الأسبوع"
+          className="min-w-0 xl:col-span-2"
         >
           <UsersLineChart data={lineData} />
         </ChartCard>
 
-        <NotificationCard items={notifications} />
+        <NotificationCard items={notifications} className="min-w-0" />
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-2">
+      <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <DataTable
-          title="Latest payments"
-          description="Recent financial transactions"
+          title="أحدث المدفوعات"
+          description="آخر العمليات المالية"
           columns={paymentColumns}
           data={latestPayments}
           rowKey={(row) => row.id}
-          action={<ViewAllLink href="/billing" />}
+          action={<ViewAllLink href="/billing" label="عرض الكل" />}
         />
         <DataTable
-          title="Latest users"
-          description="Recent joins and invitations"
+          title="أحدث المستخدمين"
+          description="انضمامات ودعوات حديثة"
           columns={userColumns}
           data={latestUsers}
           rowKey={(row) => row.id}
-          action={<ViewAllLink href="/customers" />}
+          action={<ViewAllLink href="/customers" label="عرض الكل" />}
         />
       </section>
     </div>

@@ -1,12 +1,17 @@
 /**
- * تخطيط نماذج Soft Minimalism — Mobile-first
- * - شبكة حقول: عمود واحد على الموبايل، عمودين من sm
- * - أزرار sticky في الأسفل (تلتصق بأسفل الـ Dialog على الموبايل)
+ * تخطيط نماذج — إصلاح التمرير داخل Dialog
+ *
+ * الهيكل الصحيح:
+ *   form (flex-col · flex-1 · min-h-0 · h-full · overflow-hidden)
+ *     scroll  (flex-1 · min-h-0 · overflow-y-auto)  ← الحقول فقط
+ *     footer  (shrink-0)  ← أزرار ثابتة، بدون sticky فوق المحتوى
+ *
+ * ملاحظة: sticky داخل منطقة scroll كان يغطي الحقول الأخيرة — أُزيل.
  */
 import type { FormHTMLAttributes, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-/** غلاف النموذج داخل Dialog (يملأ الارتفاع + footer ثابت) */
+/** غلاف النموذج داخل Dialog */
 export function FormShell({
   children,
   actions,
@@ -14,28 +19,43 @@ export function FormShell({
   ...props
 }: FormHTMLAttributes<HTMLFormElement> & {
   children: ReactNode;
-  /** أزرار الحفظ/الإلغاء — sticky على الموبايل */
+  /** أزرار الحفظ/الإلغاء — ثابتة في الأسفل (ليست sticky فوق الحقول) */
   actions?: ReactNode;
 }) {
   return (
     <form
       className={cn(
-        "flex min-h-0 flex-1 flex-col",
-        /* عند عدم كون الأب flex، يبقى تدفقاً عادياً */
+        // يملأ body الـ Dialog ويقيّد الارتفاع
+        "flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden",
         className,
       )}
       {...props}
     >
-      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-0.5 pb-2 [-webkit-overflow-scrolling:touch]">
-        {children}
+      {/*
+        ★ منطقة التمرير الوحيدة
+        min-h-0 + overflow-y-auto = يظهر شريط التمرير عندما يزيد المحتوى
+        pb-* إضافي يضمن ظهور آخر حقل فوق خط الفاصل مع الأزرار
+      */}
+      <div
+        className={cn(
+          "min-h-0 flex-1 overflow-y-auto overscroll-y-contain",
+          "[-webkit-overflow-scrolling:touch]",
+          "px-4 pt-4 sm:px-6 sm:pt-5",
+          // مساحة سفلية داخل الـ scroll حتى لا يلتصق آخر حقل بالحافة
+          actions ? "pb-6 sm:pb-8" : "pb-4 sm:pb-5",
+        )}
+      >
+        <div className="space-y-5">{children}</div>
       </div>
+
+      {/* Footer ثابت — shrink-0 · خارج منطقة التمرير */}
       {actions ? (
         <div
           className={cn(
-            "sticky bottom-0 z-10 -mx-1 mt-auto shrink-0 border-t border-border/80",
-            "bg-card/95 px-1 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]",
-            "backdrop-blur-md supports-[backdrop-filter]:bg-card/90",
-            "sm:static sm:mx-0 sm:bg-transparent sm:pt-4 sm:pb-0 sm:backdrop-blur-none",
+            "shrink-0 border-t border-border/80 bg-card",
+            "px-4 pt-3 sm:px-6 sm:pt-4",
+            // safe-area لشريط Home على iPhone
+            "pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-5",
           )}
         >
           {actions}
@@ -45,7 +65,7 @@ export function FormShell({
   );
 }
 
-/** شبكة حقول: stack على الموبايل */
+/** شبكة حقول: عمود واحد على الموبايل */
 export function FormGrid({
   children,
   className,
@@ -65,7 +85,7 @@ export function FormGrid({
   );
 }
 
-/** حقل بعرض كامل داخل الشبكة */
+/** حقل بعرض كامل */
 export function FormFull({
   children,
   className,
@@ -76,7 +96,7 @@ export function FormFull({
   return <div className={cn("sm:col-span-2", className)}>{children}</div>;
 }
 
-/** عنوان قسم فرعي داخل النموذج */
+/** قسم فرعي */
 export function FormSection({
   title,
   description,
@@ -107,7 +127,7 @@ export function FormSection({
   );
 }
 
-/** أزرار الإجراءات — full-width على الموبايل */
+/** أزرار — full-width على الموبايل */
 export function FormActions({
   children,
   className,
@@ -118,7 +138,8 @@ export function FormActions({
   return (
     <div
       className={cn(
-        "flex flex-col-reverse gap-2.5 sm:flex-row sm:items-center sm:justify-end sm:gap-3",
+        "flex flex-col-reverse gap-2.5",
+        "sm:flex-row sm:items-center sm:justify-end sm:gap-3",
         className,
       )}
     >
@@ -127,7 +148,7 @@ export function FormActions({
   );
 }
 
-/** تنبيه خطأ / نجاح داخل النموذج */
+/** تنبيه */
 export function FormAlert({
   tone = "error",
   children,

@@ -1,10 +1,15 @@
 "use client";
 
 /**
- * Dialog / Sheet — Soft Minimalism + Mobile-first
- * - موبايل: شاشة كاملة تقريباً (bottom sheet → full height)
- * - ديسكتوب: نافذة مركزية بزوايا ناعمة
- * - body قابل للتمرير + footer اختياري sticky
+ * Dialog / Sheet — إصلاح التمرير (flex + min-h-0)
+ *
+ * الهيكل:
+ *   overlay
+ *     panel (flex-col · ارتفاع محدود · overflow-hidden)
+ *       handle (موبايل)
+ *       header (shrink-0)
+ *       body   (flex-1 · min-h-0 · flex-col · overflow-hidden) ← FormShell هنا
+ *       footer (shrink-0 · اختياري)
  */
 import {
   useEffect,
@@ -25,7 +30,7 @@ type DialogProps = {
   footer?: ReactNode;
   className?: string;
   size?: "sm" | "md" | "lg" | "xl" | "full";
-  /** على الموبايل: full = شاشة كاملة، sheet = من الأسفل بارتفاع محدود */
+  /** full = 100dvh على الموبايل | sheet = من الأسفل */
   mobile?: "full" | "sheet";
 };
 
@@ -86,10 +91,11 @@ export function Dialog({
   return (
     <div
       className={cn(
-        "fixed inset-0 z-[80] flex justify-center bg-slate-900/40 backdrop-blur-[3px]",
+        "fixed inset-0 z-[80] flex justify-center",
+        "bg-slate-900/40 backdrop-blur-[3px] dark:bg-black/55",
+        // موبايل: تمدد كامل | ديسكتوب: توسيط
         "items-stretch p-0",
         "sm:items-center sm:p-4 sm:py-6",
-        "dark:bg-black/55",
       )}
       onMouseDown={handleBackdrop}
       role="presentation"
@@ -101,19 +107,29 @@ export function Dialog({
         aria-labelledby={titleId}
         aria-describedby={description ? descriptionId : undefined}
         className={cn(
-          "flex w-full flex-col overflow-hidden border-border bg-card text-card-foreground",
+          // ★ مهم: flex-col + overflow-hidden + ارتفاع محدود
+          "flex w-full min-h-0 flex-col overflow-hidden",
+          "border-border bg-card text-card-foreground shadow-[var(--shadow-hover)]",
           "animate-in fade-in duration-200",
-          // موبايل: full screen أو sheet
-          mobile === "full"
-            ? "h-[100dvh] max-h-[100dvh] rounded-none border-0 sm:h-auto sm:max-h-[min(90vh,880px)] sm:rounded-2xl sm:border"
-            : "mt-auto max-h-[92dvh] rounded-t-3xl border border-b-0 sm:mt-0 sm:max-h-[min(90vh,880px)] sm:rounded-2xl sm:border",
-          // ظل ناعم
-          "shadow-[var(--shadow-hover)]",
+
+          // full: ارتفاع محدود صريح → FormShell يتمكن من التمرير
+          mobile === "full" && [
+            "h-[100dvh] max-h-[100dvh] rounded-none border-0",
+            "sm:h-[min(90dvh,880px)] sm:max-h-[min(90dvh,880px)]",
+            "sm:rounded-2xl sm:border",
+          ],
+
+          // sheet: للمحتوى القصير (تأكيد) — max-height فقط بدون إجبار ارتفاع فارغ
+          mobile === "sheet" && [
+            "mt-auto max-h-[min(92dvh,640px)] rounded-t-3xl border border-b-0",
+            "sm:mt-0 sm:max-h-[min(85dvh,520px)] sm:rounded-2xl sm:border",
+          ],
+
           sizes[size],
           className,
         )}
       >
-        {/* مقبض السحب (موبايل) */}
+        {/* مقبض (موبايل) */}
         <div
           className="flex shrink-0 justify-center pt-2.5 sm:hidden"
           aria-hidden
@@ -121,6 +137,7 @@ export function Dialog({
           <span className="h-1 w-10 rounded-full bg-muted-foreground/25" />
         </div>
 
+        {/* Header ثابت */}
         <header className="flex shrink-0 items-start justify-between gap-3 border-b border-border/80 px-4 pb-3.5 pt-2 sm:px-6 sm:pb-4 sm:pt-5">
           <div className="min-w-0 flex-1 pe-2">
             <h2
@@ -148,17 +165,21 @@ export function Dialog({
           </button>
         </header>
 
-        {/* المحتوى: flex column حتى FormShell يملأ الارتفاع */}
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 py-4 sm:px-6 sm:py-5">
+        {/*
+          Body: منطقة مرنة — min-h-0 ضروري لتمرير الأبناء
+          overflow-hidden هنا (ليس على الـ scroll الداخلي) حتى FormShell يتحكم بالتمرير
+        */}
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {children}
         </div>
 
+        {/* Footer خارجي (ConfirmDialog وغيرها) */}
         {footer ? (
           <footer
             className={cn(
-              "shrink-0 border-t border-border/80 bg-muted/20 px-4 py-3",
+              "shrink-0 border-t border-border/80 bg-muted/25 px-4 py-3",
               "pb-[max(0.75rem,env(safe-area-inset-bottom))]",
-              "sm:px-6 sm:py-4 sm:pb-4",
+              "sm:px-6 sm:py-4",
             )}
           >
             {footer}
