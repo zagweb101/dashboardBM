@@ -1,6 +1,7 @@
 export { ChartCard } from "./ChartCard";
 export { DashboardShell } from "./DashboardShell";
 export { DataTable, type Column } from "./DataTable";
+export { DashboardTables } from "./dashboard-tables";
 export { Header } from "./Header";
 export { NotificationCard } from "./NotificationCard";
 export { PlaceholderPage } from "./PlaceholderPage";

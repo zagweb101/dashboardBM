@@ -1,9 +1,11 @@
 "use client";
 
 /**
- * جدول متجاوب:
- * - sm+: جدول مع scroll أفقي نظيف
- * - موبايل: بطاقات عمودية بدون تداخل أعمدة
+ * جدول متجاوب — Client Component
+ *
+ * ⚠️ لا تمرّر `cell` أو دوال من Server Component.
+ * عرّف columns داخل Client Component فقط.
+ * rowKeyField: اسم حقل string (مثل "id") — قابل للتسلسل.
  */
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
@@ -12,7 +14,6 @@ export type Column<T> = {
   key: string;
   header: string;
   className?: string;
-  /** إخفاء العمود في بطاقة الموبايل (مثلاً تكرار) */
   hideOnMobileCard?: boolean;
   cell: (row: T) => ReactNode;
 };
@@ -22,7 +23,8 @@ type DataTableProps<T> = {
   description?: string;
   columns: Column<T>[];
   data: T[];
-  rowKey: (row: T) => string;
+  /** اسم حقل المفتاح — افتراضي "id" (ليس function) */
+  rowKeyField?: string;
   action?: ReactNode;
   className?: string;
   emptyMessage?: string;
@@ -33,12 +35,19 @@ export function DataTable<T>({
   description,
   columns,
   data,
-  rowKey,
+  rowKeyField = "id",
   action,
   className,
   emptyMessage = "لا توجد بيانات حالياً",
 }: DataTableProps<T>) {
   const mobileColumns = columns.filter((c) => !c.hideOnMobileCard);
+
+  function getRowKey(row: T, index: number): string {
+    const record = row as Record<string, unknown>;
+    const value = record[rowKeyField];
+    if (value == null) return `row-${index}`;
+    return String(value);
+  }
 
   return (
     <section
@@ -65,10 +74,9 @@ export function DataTable<T>({
         </p>
       ) : (
         <>
-          {/* ── موبايل: بطاقات ── */}
           <ul className="divide-y divide-border md:hidden">
-            {data.map((row) => (
-              <li key={rowKey(row)} className="space-y-2.5 px-4 py-4">
+            {data.map((row, index) => (
+              <li key={getRowKey(row, index)} className="space-y-2.5 px-4 py-4">
                 {mobileColumns.map((col) => (
                   <div
                     key={col.key}
@@ -91,7 +99,6 @@ export function DataTable<T>({
             ))}
           </ul>
 
-          {/* ── تابلت/ديسكتوب: جدول ── */}
           <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[560px] border-collapse text-sm">
               <thead>
@@ -100,8 +107,7 @@ export function DataTable<T>({
                     <th
                       key={col.key}
                       className={cn(
-                        "px-4 py-3 text-start text-xs font-semibold tracking-wide sm:px-5",
-                        "whitespace-nowrap",
+                        "px-4 py-3 text-start text-xs font-semibold tracking-wide whitespace-nowrap sm:px-5",
                         col.className,
                       )}
                     >
@@ -111,22 +117,22 @@ export function DataTable<T>({
                 </tr>
               </thead>
               <tbody>
-                {data.map((row) => (
+                {data.map((row, index) => (
                   <tr
-                    key={rowKey(row)}
+                    key={getRowKey(row, index)}
                     className="border-t border-border transition hover:bg-muted/30"
                   >
                     {columns.map((col) => (
                       <td
                         key={col.key}
                         className={cn(
-                          "max-w-[220px] px-4 py-3.5 text-card-foreground sm:px-5",
-                          // لا تقطع كل شيء — فقط السماح بالتفاف عند الحاجة
-                          "align-middle",
+                          "max-w-[220px] px-4 py-3.5 align-middle text-card-foreground sm:px-5",
                           col.className,
                         )}
                       >
-                        <div className="min-w-0 break-words">{col.cell(row)}</div>
+                        <div className="min-w-0 break-words">
+                          {col.cell(row)}
+                        </div>
                       </td>
                     ))}
                   </tr>
