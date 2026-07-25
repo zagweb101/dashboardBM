@@ -1,26 +1,121 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f6f7fb;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --border: #e8ecf2;
+  --ring: #e11d48;
+  --primary: #e11d48;
+  --primary-foreground: #ffffff;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0f172a;
+  --success: #10b981;
+  --danger: #ef4444;
+  --shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 24px rgba(15, 23, 42, 0.04);
+  --shadow-hover: 0 2px 4px rgba(15, 23, 42, 0.06),
+    0 12px 28px rgba(15, 23, 42, 0.08);
+  --radius-card: 1rem;
+}
+
+.dark {
+  --background: #0b1220;
+  --foreground: #e2e8f0;
+  --card: #111827;
+  --card-foreground: #e2e8f0;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --border: #1f2937;
+  --ring: #fb7185;
+  --primary: #e11d48;
+  --primary-foreground: #ffffff;
+  --sidebar: #0f172a;
+  --sidebar-foreground: #e2e8f0;
+  --success: #34d399;
+  --danger: #f87171;
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.35),
+    0 12px 32px rgba(0, 0, 0, 0.25);
+  --shadow-hover: 0 2px 6px rgba(0, 0, 0, 0.4),
+    0 16px 36px rgba(0, 0, 0, 0.35);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-cairo);
+  --shadow-soft: var(--shadow-soft);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--border);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-cairo), "Tahoma", "Segoe UI", sans-serif;
+  min-height: 100%;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--primary) 25%, transparent);
+}
+
+/* عناوين عربية أوضح */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+  letter-spacing: -0.01em;
+}
+
+/* أرقام متناسقة في الشارات والإحصائيات */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Recharts tooltip polish */
+.recharts-default-tooltip {
+  border-radius: 12px !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-soft) !important;
+}
+
+/* انتقال خفيف لظهور الصفحات */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in.fade-in {
+  animation: fade-in 0.28s ease-out both;
 }

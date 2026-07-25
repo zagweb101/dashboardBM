@@ -1,0 +1,145 @@
+import type { Permission, Role, RoleDefinition } from "@/types/rbac";
+
+const ALL_PERMISSIONS: Permission[] = [
+  "dashboard:view",
+  "analytics:view",
+  "analytics:export",
+  "customers:view",
+  "customers:create",
+  "customers:edit",
+  "customers:delete",
+  "students:view",
+  "students:create",
+  "students:edit",
+  "students:delete",
+  "courses:view",
+  "courses:create",
+  "courses:edit",
+  "courses:delete",
+  "attendance:view",
+  "attendance:manage",
+  "payments:view",
+  "payments:create",
+  "payments:edit",
+  "payments:delete",
+  "reports:view",
+  "reports:export",
+  "billing:view",
+  "billing:manage",
+  "settings:view",
+  "settings:manage",
+  "users:view",
+  "users:manage",
+  "organization:manage",
+];
+
+export const ROLE_DEFINITIONS: Record<Role, RoleDefinition> = {
+  owner: {
+    id: "owner",
+    rank: 100,
+    label: { ar: "المالك", en: "Owner" },
+    description: {
+      ar: "صلاحيات كاملة على المؤسسة والفوترة والأعضاء",
+      en: "Full control over organization, billing, and members",
+    },
+    permissions: ALL_PERMISSIONS,
+  },
+  admin: {
+    id: "admin",
+    rank: 80,
+    label: { ar: "مسؤول", en: "Admin" },
+    description: {
+      ar: "إدارة المستخدمين والإعدادات والعملاء دون ملكية المؤسسة",
+      en: "Manage users, settings, and customers without org ownership",
+    },
+    permissions: ALL_PERMISSIONS.filter((p) => p !== "organization:manage"),
+  },
+  manager: {
+    id: "manager",
+    rank: 60,
+    label: { ar: "مدير", en: "Manager" },
+    description: {
+      ar: "إدارة المتدربين والدورات والحضور والمدفوعات",
+      en: "Manage students, courses, attendance, and payments",
+    },
+    permissions: [
+      "dashboard:view",
+      "analytics:view",
+      "analytics:export",
+      "customers:view",
+      "customers:create",
+      "customers:edit",
+      "students:view",
+      "students:create",
+      "students:edit",
+      "courses:view",
+      "courses:create",
+      "courses:edit",
+      "attendance:view",
+      "attendance:manage",
+      "payments:view",
+      "payments:create",
+      "payments:edit",
+      "reports:view",
+      "reports:export",
+      "billing:view",
+      "settings:view",
+      "users:view",
+    ],
+  },
+  employee: {
+    id: "employee",
+    rank: 40,
+    label: { ar: "موظف", en: "Employee" },
+    description: {
+      ar: "عمل يومي: متدربون، تسجيل حضور، مدفوعات",
+      en: "Day-to-day: students, attendance, payments",
+    },
+    permissions: [
+      "dashboard:view",
+      "analytics:view",
+      "customers:view",
+      "customers:create",
+      "customers:edit",
+      "students:view",
+      "students:create",
+      "students:edit",
+      "courses:view",
+      "attendance:view",
+      "attendance:manage",
+      "payments:view",
+      "payments:create",
+      "reports:view",
+      "settings:view",
+    ],
+  },
+  viewer: {
+    id: "viewer",
+    rank: 20,
+    label: { ar: "مشاهد", en: "Viewer" },
+    description: {
+      ar: "عرض فقط للوحة التحكم والتحليلات",
+      en: "Read-only access to dashboard and analytics",
+    },
+    permissions: [
+      "dashboard:view",
+      "analytics:view",
+      "customers:view",
+      "students:view",
+      "courses:view",
+      "attendance:view",
+      "payments:view",
+      "reports:view",
+      "billing:view",
+      "settings:view",
+    ],
+  },
+};
+
+export function getRoleDefinition(role: Role): RoleDefinition {
+  return ROLE_DEFINITIONS[role];
+}
+
+export function getRoleLabel(role: Role, locale: "ar" | "en" = "ar"): string {
+  return ROLE_DEFINITIONS[role].label[locale];
+}

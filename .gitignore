@@ -1,4 +1,6 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# =============================================================================
+# بيت المصور — Git ignore
+# =============================================================================
 
 # dependencies
 /node_modules
@@ -19,10 +21,13 @@
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
+Thumbs.db
 *.pem
+*.log
 
 # debug
 npm-debug.log*
@@ -30,12 +35,38 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env — لا ترفع أسراراً أبداً
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+# اسمح برفع المثال فقط
+!.env.example
 
-# vercel
+# vercel / railway local
 .vercel
+.railway
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Desktop.ini
+
+# images/videos generated locally (إن وُجدت)
+/images/
+/videos/
+
+# sessions / temp
+*.tmp
+.cache/

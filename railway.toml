@@ -1,0 +1,24 @@
+# =============================================================================
+# Railway — بيت المصور SaaS Dashboard
+# =============================================================================
+# بعد ربط GitHub: Railway يقرأ هذا الملف تلقائياً.
+# أضف خدمة PostgreSQL ثم اربط DATABASE_URL من Variables.
+# =============================================================================
+
+[build]
+builder = "NIXPACKS"
+# تثبيت + بناء Next.js
+buildCommand = "npm ci && npm run build"
+
+[deploy]
+# Next يستمع على PORT الذي يوفّره Railway
+startCommand = "npm run start"
+# مسار فحص الصحة (يفتح / → redirect لـ login أو dashboard)
+healthcheckPath = "/"
+healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5
+
+# اختياري: منطقة قريبة من السعودية/الخليج إن توفرت
+# [regions]
+#   ...

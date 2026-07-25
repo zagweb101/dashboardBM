@@ -1,0 +1,26 @@
+# PostgreSQL محلي لاختبار Dual-mode قبل Railway
+# التشغيل: docker compose up -d
+# ثم: psql postgresql://bayt:bayt@localhost:5432/bayt -f db/schema.sql
+#      psql postgresql://bayt:bayt@localhost:5432/bayt -f db/seed.sql
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: bayt-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: bayt
+      POSTGRES_PASSWORD: bayt
+      POSTGRES_DB: bayt
+    volumes:
+      - bayt_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bayt -d bayt"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  bayt_pg_data:

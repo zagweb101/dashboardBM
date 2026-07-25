@@ -1,0 +1,14 @@
+# Nixpacks — بديل/مكمّل لـ railway.toml على Railway
+# يضمن Node.js مناسب لـ Next 16
+
+[phases.setup]
+nixPkgs = ["nodejs_22", "npm-10_x"]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "npm run start"
