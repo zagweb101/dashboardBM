@@ -2,8 +2,8 @@
 
 /**
  * Revenue mix — النسب خارج الدائرة لتجنب التداخل
- * موبايل: الدائرة فوق + قائمة تحت
- * ديسكتوب: عمودان (دائرة + أسطورة)
+ * موبايل / بطاقة ضيقة: الدائرة فوق + قائمة تحت
+ * شاشات أوسع: عمودان (دائرة + أسطورة) مع عرض كافٍ للأسماء الكاملة
  */
 import {
   Cell,
@@ -26,13 +26,14 @@ export function DonutChart({ data, className }: DonutChartProps) {
   return (
     <div
       className={cn(
-        // عمودي على الموبايل، أفقي من md
-        "flex h-full min-h-0 flex-col gap-5 md:flex-row md:items-center md:gap-6",
+        // دائماً عمودي داخل البطاقة الضيقة؛ جنباً إلى جنب فقط عند اتساع كافٍ
+        "flex h-full min-h-0 flex-col items-stretch gap-5",
+        "lg:flex-row lg:items-center lg:gap-5",
         className,
       )}
     >
       {/* الدائرة — بدون labels على القطاعات */}
-      <div className="relative mx-auto h-52 w-full max-w-[220px] shrink-0 sm:h-56 md:mx-0 md:w-[220px]">
+      <div className="relative mx-auto h-52 w-full max-w-[200px] shrink-0 sm:h-56 sm:max-w-[220px] lg:mx-0 lg:w-[200px] lg:max-w-none">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart margin={{ top: 4, right: 4, bottom: 4, left: 4 }}>
             <Pie
@@ -45,7 +46,6 @@ export function DonutChart({ data, className }: DonutChartProps) {
               outerRadius="82%"
               paddingAngle={4}
               strokeWidth={0}
-              // لا نستخدم label على القطاعات — يمنع التزاحم
               isAnimationActive
             >
               {data.map((entry) => (
@@ -70,7 +70,7 @@ export function DonutChart({ data, className }: DonutChartProps) {
           </PieChart>
         </ResponsiveContainer>
 
-        {/* مركز الدائرة — نص مضغوط بلا تداخل */}
+        {/* مركز الدائرة */}
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-0.5 px-6 text-center">
           <span className="text-[11px] font-medium leading-none text-muted-foreground">
             الإجمالي
@@ -84,19 +84,30 @@ export function DonutChart({ data, className }: DonutChartProps) {
         </div>
       </div>
 
-      {/* الأسطورة — تحت على الموبايل، بجانب على الديسكتوب */}
-      <ul className="grid w-full min-w-0 flex-1 grid-cols-1 gap-2.5 xs:grid-cols-2 md:grid-cols-1">
+      {/*
+        الأسطورة — تحت الدائرة على الشاشات الضيقة
+        أسماء كاملة بدون truncate / line-clamp / max-width
+      */}
+      <ul
+        className={cn(
+          "grid w-full flex-1 gap-2.5",
+          // صفّان على الشاشات المتوسطة عند التكديس العمودي
+          "grid-cols-1 sm:grid-cols-2",
+          // عمود واحد بجانب الدائرة لإعطاء كل اسم مساحة كاملة
+          "lg:grid-cols-1 lg:min-w-[9.5rem]",
+        )}
+      >
         {data.map((item) => (
           <li
             key={item.name}
-            className="flex min-w-0 items-center gap-3 rounded-2xl border border-border/80 bg-muted/20 px-3 py-2.5"
+            className="flex items-center gap-2.5 rounded-2xl border border-border/80 bg-muted/20 px-3 py-2.5"
           >
             <span
               className="h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-background"
               style={{ backgroundColor: item.color }}
               aria-hidden
             />
-            <span className="min-w-0 flex-1 truncate text-sm font-medium text-card-foreground">
+            <span className="flex-1 text-sm font-medium leading-snug text-card-foreground">
               {item.name}
             </span>
             <span className="shrink-0 text-sm font-extrabold tabular-nums text-card-foreground">
