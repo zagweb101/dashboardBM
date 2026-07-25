@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useId, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import {
   BookOpen,
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog } from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { FormActions } from "@/components/ui/form-layout";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import {
@@ -58,6 +59,7 @@ export function CoursesModule({
   const { locale } = useLanguage();
   const { toast } = useToast();
   const ar = locale === "ar";
+  const courseFormId = useId();
 
   const [courses, setCourses] = useState(initialCourses);
   const [filters, setFilters] = useState<CourseFilters>({
@@ -72,6 +74,7 @@ export function CoursesModule({
   const [deleting, setDeleting] = useState<Course | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [pending, startTransition] = useTransition();
+  const [formPending, setFormPending] = useState(false);
 
   const filtered = useMemo(() => {
     const q = filters.query?.trim().toLowerCase() ?? "";
@@ -370,7 +373,10 @@ export function CoursesModule({
 
       <Dialog
         open={formOpen}
-        onOpenChange={setFormOpen}
+        onOpenChange={(open) => {
+          setFormOpen(open);
+          if (!open) setFormPending(false);
+        }}
         title={
           formMode === "create"
             ? ar
@@ -386,11 +392,44 @@ export function CoursesModule({
             : "Course details shown when enrolling students."
         }
         size="xl"
+        footer={
+          <FormActions>
+            <Button
+              type="button"
+              variant="secondary"
+              className="h-12 w-full sm:h-11 sm:w-auto"
+              onClick={() => setFormOpen(false)}
+              disabled={formPending}
+            >
+              {ar ? "إلغاء" : "Cancel"}
+            </Button>
+            <Button
+              type="submit"
+              form={courseFormId}
+              className="h-12 w-full sm:h-11 sm:w-auto sm:min-w-[9rem]"
+              disabled={formPending}
+            >
+              {formPending
+                ? ar
+                  ? "جارٍ الحفظ..."
+                  : "Saving..."
+                : formMode === "create"
+                  ? ar
+                    ? "إنشاء الدورة"
+                    : "Create course"
+                  : ar
+                    ? "حفظ التغييرات"
+                    : "Save changes"}
+            </Button>
+          </FormActions>
+        }
       >
         <CourseForm
+          formId={courseFormId}
+          key={editing?.id ?? "create"}
           mode={formMode}
           course={editing ?? undefined}
-          onCancel={() => setFormOpen(false)}
+          onPendingChange={setFormPending}
           onSuccess={(course) => {
             setCourses((prev) => {
               const exists = prev.some((c) => c.id === course.id);

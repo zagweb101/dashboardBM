@@ -43,10 +43,14 @@ declare global {
 
 function createPool(): Pool {
   const connectionString = getDatabaseUrl();
+  const max = Math.min(
+    Number(process.env.DB_POOL_MAX ?? "5"),
+    20,
+  );
   const pool = new Pool({
     connectionString,
     ssl: resolveSsl(connectionString),
-    max: 10,
+    max: Number.isFinite(max) && max > 0 ? max : 5,
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 10_000,
   });

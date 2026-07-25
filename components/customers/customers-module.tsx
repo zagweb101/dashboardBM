@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useId, useMemo, useState, useTransition } from "react";
 import { Pencil, Plus, Trash2, Users } from "lucide-react";
 import type { Customer, CustomerFilters, CustomerStats } from "@/types/customer";
 import { CUSTOMER_STATUSES } from "@/types/customer";
@@ -60,6 +60,7 @@ export function CustomersModule({
   const { locale } = useLanguage();
   const ar = locale === "ar";
   const { toast } = useToast();
+  const customerFormId = useId();
 
   const [customers, setCustomers] = useState(initialCustomers);
   const [filters, setFilters] = useState<CustomerFilters>({
@@ -313,7 +314,10 @@ export function CustomersModule({
 
       <Dialog
         open={formOpen}
-        onOpenChange={setFormOpen}
+        onOpenChange={(open) => {
+          setFormOpen(open);
+          if (!open) setEditing(null);
+        }}
         title={
           mode === "create"
             ? ar
@@ -324,34 +328,37 @@ export function CustomersModule({
               : "Edit customer"
         }
         size="lg"
+        footer={
+          <FormActions>
+            <Button
+              type="button"
+              variant="secondary"
+              className="h-12 w-full sm:h-11 sm:w-auto"
+              onClick={() => setFormOpen(false)}
+              disabled={pending}
+            >
+              {ar ? "إلغاء" : "Cancel"}
+            </Button>
+            <Button
+              type="submit"
+              form={customerFormId}
+              className="h-12 w-full sm:h-11 sm:w-auto sm:min-w-[7rem]"
+              disabled={pending}
+            >
+              {pending
+                ? ar
+                  ? "جارٍ الحفظ..."
+                  : "Saving..."
+                : ar
+                  ? "حفظ"
+                  : "Save"}
+            </Button>
+          </FormActions>
+        }
       >
         <FormShell
+          id={customerFormId}
           action={formAction}
-          actions={
-            <FormActions>
-              <Button
-                type="button"
-                variant="secondary"
-                className="w-full sm:w-auto"
-                onClick={() => setFormOpen(false)}
-              >
-                {ar ? "إلغاء" : "Cancel"}
-              </Button>
-              <Button
-                type="submit"
-                className="w-full sm:w-auto sm:min-w-[7rem]"
-                disabled={pending}
-              >
-                {pending
-                  ? ar
-                    ? "جارٍ الحفظ..."
-                    : "Saving..."
-                  : ar
-                    ? "حفظ"
-                    : "Save"}
-              </Button>
-            </FormActions>
-          }
         >
           {mode === "edit" && editing ? (
             <input type="hidden" name="id" value={editing.id} />

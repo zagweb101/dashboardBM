@@ -7,12 +7,10 @@ import {
   COURSE_STATUSES,
   type Course,
 } from "@/types/course";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  FormActions,
   FormAlert,
   FormFull,
   FormGrid,
@@ -32,19 +30,21 @@ import {
 } from "@/lib/courses/actions";
 
 type CourseFormProps = {
+  formId: string;
   mode: "create" | "edit";
   course?: Course;
   onSuccess?: (course: Course) => void;
-  onCancel?: () => void;
+  onPendingChange?: (pending: boolean) => void;
 };
 
 const initialState: ActionState = { success: false };
 
 export function CourseForm({
+  formId,
   mode,
   course,
   onSuccess,
-  onCancel,
+  onPendingChange,
 }: CourseFormProps) {
   const { locale } = useLanguage();
   const action = mode === "create" ? createCourseAction : updateCourseAction;
@@ -54,6 +54,10 @@ export function CourseForm({
   useEffect(() => {
     if (state.success && state.course) onSuccess?.(state.course);
   }, [state, onSuccess]);
+
+  useEffect(() => {
+    onPendingChange?.(pending);
+  }, [pending, onPendingChange]);
 
   const statusOptions = useMemo(
     () =>
@@ -83,41 +87,7 @@ export function CourseForm({
   const fe = (key: string) => state.fieldErrors?.[key];
 
   return (
-    <FormShell
-      action={formAction}
-      actions={
-        <FormActions>
-          {onCancel ? (
-            <Button
-              type="button"
-              variant="secondary"
-              className="w-full sm:w-auto"
-              onClick={onCancel}
-              disabled={pending}
-            >
-              {ar ? "إلغاء" : "Cancel"}
-            </Button>
-          ) : null}
-          <Button
-            type="submit"
-            className="w-full sm:w-auto sm:min-w-[9rem]"
-            disabled={pending}
-          >
-            {pending
-              ? ar
-                ? "جارٍ الحفظ..."
-                : "Saving..."
-              : mode === "create"
-                ? ar
-                  ? "إنشاء الدورة"
-                  : "Create course"
-                : ar
-                  ? "حفظ التغييرات"
-                  : "Save changes"}
-          </Button>
-        </FormActions>
-      }
-    >
+    <FormShell id={formId} action={formAction}>
       {mode === "edit" && course ? (
         <input type="hidden" name="id" value={course.id} />
       ) : null}

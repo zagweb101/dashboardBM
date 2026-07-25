@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useId, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { Plus, Trash2, Wallet } from "lucide-react";
 import type { Course } from "@/types/course";
@@ -68,6 +68,7 @@ export function PaymentsModule({
   const { locale } = useLanguage();
   const { toast } = useToast();
   const ar = locale === "ar";
+  const paymentFormId = useId();
 
   const [payments, setPayments] = useState(initialPayments);
   const [query, setQuery] = useState("");
@@ -350,7 +351,13 @@ export function PaymentsModule({
 
       <Dialog
         open={formOpen}
-        onOpenChange={setFormOpen}
+        onOpenChange={(open) => {
+          setFormOpen(open);
+          if (!open) {
+            setFormError(null);
+            setFieldErrors({});
+          }
+        }}
         title={ar ? "تسجيل دفعة" : "Record payment"}
         description={
           ar
@@ -358,34 +365,37 @@ export function PaymentsModule({
             : "Tuition payment — unrelated to SaaS Stripe subscription."
         }
         size="lg"
+        footer={
+          <FormActions>
+            <Button
+              type="button"
+              variant="secondary"
+              className="h-12 w-full sm:h-11 sm:w-auto"
+              onClick={() => setFormOpen(false)}
+              disabled={pending}
+            >
+              {ar ? "إلغاء" : "Cancel"}
+            </Button>
+            <Button
+              type="submit"
+              form={paymentFormId}
+              className="h-12 w-full sm:h-11 sm:w-auto sm:min-w-[8rem]"
+              disabled={pending}
+            >
+              {pending
+                ? ar
+                  ? "جارٍ الحفظ..."
+                  : "Saving..."
+                : ar
+                  ? "حفظ الدفعة"
+                  : "Save payment"}
+            </Button>
+          </FormActions>
+        }
       >
         <FormShell
+          id={paymentFormId}
           action={onCreate}
-          actions={
-            <FormActions>
-              <Button
-                type="button"
-                variant="secondary"
-                className="w-full sm:w-auto"
-                onClick={() => setFormOpen(false)}
-              >
-                {ar ? "إلغاء" : "Cancel"}
-              </Button>
-              <Button
-                type="submit"
-                className="w-full sm:w-auto sm:min-w-[8rem]"
-                disabled={pending}
-              >
-                {pending
-                  ? ar
-                    ? "جارٍ الحفظ..."
-                    : "Saving..."
-                  : ar
-                    ? "حفظ الدفعة"
-                    : "Save payment"}
-              </Button>
-            </FormActions>
-          }
         >
           {formError ? <FormAlert tone="error">{formError}</FormAlert> : null}
           <FormGrid>

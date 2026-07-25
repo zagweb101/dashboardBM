@@ -56,6 +56,10 @@ const messages = {
     ar: "يتطلب Auth.js اتصال PostgreSQL (DATABASE_URL). للتطوير المحلي شغّل Docker.",
     en: "Auth.js requires PostgreSQL (DATABASE_URL). Start Docker for local dev.",
   },
+  rateLimited: {
+    ar: "طلبات كثيرة جداً. حاول مرة أخرى بعد قليل.",
+    en: "Too many requests. Please try again later.",
+  },
 } as const;
 
 export type AuthMessageKey = keyof typeof messages;

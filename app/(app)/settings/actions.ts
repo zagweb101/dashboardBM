@@ -7,10 +7,12 @@
 import { revalidatePath } from "next/cache";
 import { requirePermission, requireUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { ROLES, type Role } from "@/types/rbac";
+import { type Role } from "@/types/rbac";
 import type { ThemePreference } from "@/types/database";
 import { hasPermission } from "@/lib/rbac/permissions";
 import { getRoleDefinition } from "@/lib/rbac/roles";
+import { assertValidRole, parseRole } from "@/lib/rbac/guards";
+import { MAX_LENGTHS, validateFieldLengths } from "@/lib/security/input";
 
 export type SettingsActionState = {
   success: boolean;
@@ -47,6 +49,16 @@ export async function updateProfileAction(
   const theme = String(formData.get("theme") ?? user.theme ?? "system").trim();
 
   const fieldErrors: Record<string, string> = {};
+
+  const lengthError = validateFieldLengths([
+    { value: fullName, max: MAX_LENGTHS.name, name: "fullName" },
+    { value: email, max: MAX_LENGTHS.email, name: "email" },
+    { value: phone, max: MAX_LENGTHS.phone, name: "phone" },
+    { value: avatarUrl, max: MAX_LENGTHS.url, name: "avatarUrl" },
+  ]);
+  if (lengthError) {
+    fieldErrors.fullName = msg(locale, "الحقل طويل جداً", lengthError);
+  }
   if (fullName.length < 2) {
     fieldErrors.fullName = msg(locale, "الاسم قصير جداً", "Name is too short");
   }
@@ -111,7 +123,7 @@ export async function inviteMemberAction(
 
   const fullName = String(formData.get("fullName") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
-  const role = String(formData.get("role") ?? "employee").trim() as Role;
+  const roleStr = String(formData.get("role") ?? "employee").trim();
 
   if (fullName.length < 2 || !email) {
     return {
@@ -119,15 +131,29 @@ export async function inviteMemberAction(
       error: msg(locale, "الاسم والبريد مطلوبان", "Name and email are required"),
     };
   }
-  if (!(ROLES as readonly string[]).includes(role) || role === "owner") {
+
+  let role: Role;
+  try {
+    role = assertValidRole(roleStr);
+  } catch {
     return {
       success: false,
-      error: msg(
-        locale,
-        "لا يمكن تعيين دور المالك من هنا",
-        "Cannot assign Owner role here",
-      ),
+      error: msg(locale, "الدور غير صالح", "Invalid role"),
     };
+  }
+  if (role === "owner") {
+    return {
+      success: false,
+      error: msg(locale, "لا يمكن تعيين دور المالك من هنا", "Cannot assign Owner role here"),
+    };
+  }
+
+  const lengthError = validateFieldLengths([
+    { value: fullName, max: MAX_LENGTHS.name, name: "fullName" },
+    { value: email, max: MAX_LENGTHS.email, name: "email" },
+  ]);
+  if (lengthError) {
+    return { success: false, error: msg(locale, "الحقل طويل جداً", lengthError) };
   }
 
   // لا يُسمح بتعيين دور أعلى منك
@@ -145,7 +171,8 @@ export async function inviteMemberAction(
   }
 
   try {
-    const temp = "password123";
+    const { generateTempPassword } = await import("@/lib/security/temp-password");
+    const temp = generateTempPassword();
     await db.inviteTeamMember(user.organizationId, {
       fullName,
       email,
@@ -190,11 +217,10 @@ export async function updateMemberRoleAction(
   const user = await requirePermission("users:manage");
   const locale = loc(user);
 
-  if (!(ROLES as readonly string[]).includes(role)) {
+  const nextRole = parseRole(role);
+  if (!nextRole) {
     return { success: false, error: msg(locale, "دور غير صالح", "Invalid role") };
   }
-
-  const nextRole = role as Role;
   if (nextRole === "owner" && user.role !== "owner") {
     return {
       success: false,

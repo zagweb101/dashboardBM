@@ -21,6 +21,10 @@ import {
   queryOne,
   withTransaction,
 } from "@/lib/db/postgres";
+import {
+  assertRateLimit,
+  AUTH_RATE_LIMITS,
+} from "@/lib/security/rate-limit";
 
 function localeFromForm(formData: FormData): AuthLocale {
   const l = String(formData.get("locale") ?? "ar");
@@ -48,6 +52,12 @@ export async function loginAction(formData: FormData): Promise<AuthResult> {
 
   if (!email || !password) {
     return { success: false, error: authMessage("requiredFields", locale) };
+  }
+
+  try {
+    assertRateLimit({ key: `login:${email}`, ...AUTH_RATE_LIMITS.login });
+  } catch {
+    return { success: false, error: authMessage("rateLimited", locale) };
   }
 
   try {
@@ -97,22 +107,18 @@ export async function registerAction(formData: FormData): Promise<AuthResult> {
     };
   }
 
-  // بدون Postgres: سجّل دخول demo (تطوير)
+  try {
+    assertRateLimit({ key: `register:${email}`, ...AUTH_RATE_LIMITS.register });
+  } catch {
+    return { success: false, error: authMessage("rateLimited", locale) };
+  }
+
+  // بدون Postgres: التسجيل غير مدعوم — وجّه للمصادقة التجريبية
   if (!isDatabaseConfigured()) {
-    try {
-      await signIn("credentials", {
-        email: "owner@example.com",
-        password: "password123",
-        redirectTo: "/dashboard",
-      });
-      return { success: true };
-    } catch (error) {
-      if (error && typeof error === "object" && "digest" in error) throw error;
-      return {
-        success: false,
-        error: authMessage("dbRequired", locale),
-      };
-    }
+    return {
+      success: false,
+      error: authMessage("dbRequired", locale),
+    };
   }
 
   try {
@@ -202,6 +208,12 @@ export async function forgotPasswordAction(
 
   if (!email) {
     return { success: false, error: authMessage("emailRequired", locale) };
+  }
+
+  try {
+    assertRateLimit({ key: `forgot:${email}`, ...AUTH_RATE_LIMITS.forgotPassword });
+  } catch {
+    return { success: true }; // Don't reveal rate limiting
   }
 
   // لا نفصح عن وجود الحساب

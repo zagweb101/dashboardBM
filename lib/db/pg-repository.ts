@@ -1,11 +1,10 @@
 /**
  * مستودع PostgreSQL — نفس واجهة mock-repository
- * يُفعَّل تلقائياً عند DATABASE_URL
+ * يُفعَّل تلقائياً عند DATABASE_URL
  *
  * جداول: organizations, profiles, students, courses, enrollments,
- *        attendance_records, student_payments, customers, reports
- *
- * analytics / billing invoices: تبقى mock حتى تُضاف جداولها
+ *        attendance_records, student_payments, customers, reports,
+ *        organization_subscriptions, invoices, analytics_points
  */
 import type { PoolClient } from "pg";
 import {
@@ -31,6 +30,7 @@ import {
   mockAnalytics,
   mockInvoices,
   mockSubscriptions,
+  MOCK_ORG_ID,
   MOCK_PASSWORD,
 } from "@/lib/db/mock-data";
 import type {
@@ -694,19 +694,98 @@ export const pgRepository = {
   },
 
   async getAnalytics() {
-    return mockAnalytics;
+    const rows = await query<{
+      label: string;
+      revenue: number;
+      customers: number;
+      churn: number;
+    }>(
+      `SELECT label, revenue::int, customers, churn::int as churn
+       FROM analytics_points
+       WHERE organization_id = $1
+       ORDER BY created_at ASC`,
+      [MOCK_ORG_ID],
+    );
+    if (rows.length === 0) return mockAnalytics;
+    return rows.map((r) => ({
+      label: r.label,
+      revenue: r.revenue,
+      customers: r.customers,
+      churn: r.churn,
+    }));
   },
 
   async getSubscription(
     organizationId: string,
   ): Promise<OrganizationSubscription | null> {
-    return (
-      mockSubscriptions.find((s) => s.organizationId === organizationId) ?? null
+    const row = await queryOne<{
+      id: string;
+      organization_id: string;
+      plan_id: string;
+      status: string;
+      interval: string;
+      current_period_end: Date | string;
+      cancel_at_period_end: boolean;
+      stripe_customer_id: string | null;
+      stripe_subscription_id: string | null;
+    }>(
+      `SELECT id, organization_id, plan_id, status, interval,
+              current_period_end, cancel_at_period_end,
+              stripe_customer_id, stripe_subscription_id
+       FROM organization_subscriptions
+       WHERE organization_id = $1
+       LIMIT 1`,
+      [organizationId],
     );
+    if (!row) {
+      return (
+        mockSubscriptions.find((s) => s.organizationId === organizationId) ?? null
+      );
+    }
+    return {
+      id: row.id,
+      organizationId: row.organization_id,
+      planId: row.plan_id as OrganizationSubscription["planId"],
+      status: row.status as OrganizationSubscription["status"],
+      interval: row.interval as OrganizationSubscription["interval"],
+      currentPeriodEnd:
+        row.current_period_end instanceof Date
+          ? row.current_period_end.toISOString()
+          : String(row.current_period_end),
+      cancelAtPeriodEnd: row.cancel_at_period_end,
+      stripeCustomerId: row.stripe_customer_id,
+      stripeSubscriptionId: row.stripe_subscription_id,
+    };
   },
 
   async listInvoices(): Promise<Invoice[]> {
-    return mockInvoices;
+    const rows = await query<{
+      id: string;
+      number: string;
+      amount: number;
+      currency: string;
+      status: string;
+      pdf_url: string | null;
+      created_at: Date | string;
+    }>(
+      `SELECT id, number, amount::int, currency, status, pdf_url, created_at
+       FROM invoices
+       ORDER BY created_at DESC
+       LIMIT 50`,
+    );
+    if (rows.length === 0) return mockInvoices;
+    return rows.map((r) => ({
+      id: r.id,
+      number: r.number,
+      amount: r.amount,
+      currency: r.currency,
+      status: r.status as Invoice["status"],
+      createdAt:
+        r.created_at instanceof Date
+          ? r.created_at.toISOString()
+          : String(r.created_at),
+      pdfUrl: r.pdf_url ?? undefined,
+    }));
   },
 
   // ── Students ─────────────────────────────────────────────────────────

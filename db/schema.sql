@@ -311,3 +311,65 @@ CREATE TABLE IF NOT EXISTS report_runs (
 );
 
 CREATE INDEX IF NOT EXISTS idx_report_runs_report ON report_runs(report_id);
+
+-- ---------------------------------------------------------------------------
+-- Organization subscriptions (Stripe-backed)
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS organization_subscriptions (
+  id                        TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  organization_id           TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  plan_id                   TEXT NOT NULL DEFAULT 'free'
+                              CHECK (plan_id IN ('free','starter','pro','enterprise')),
+  status                    TEXT NOT NULL DEFAULT 'active'
+                              CHECK (status IN ('trialing','active','past_due','canceled','incomplete','unpaid')),
+  interval                  TEXT NOT NULL DEFAULT 'month'
+                              CHECK (interval IN ('month','year')),
+  current_period_end        TIMESTAMPTZ,
+  cancel_at_period_end      BOOLEAN NOT NULL DEFAULT FALSE,
+  stripe_customer_id        TEXT,
+  stripe_subscription_id    TEXT UNIQUE,
+  created_at                TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at                TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_subs_org ON organization_subscriptions(organization_id);
+CREATE INDEX IF NOT EXISTS idx_subs_stripe ON organization_subscriptions(stripe_subscription_id);
+
+-- ---------------------------------------------------------------------------
+-- Invoices
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS invoices (
+  id                TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  organization_id   TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  number            TEXT NOT NULL,
+  amount            NUMERIC(12,2) NOT NULL DEFAULT 0,
+  currency          TEXT NOT NULL DEFAULT 'SAR',
+  status            TEXT NOT NULL DEFAULT 'open'
+                      CHECK (status IN ('paid','open','void','uncollectible')),
+  stripe_invoice_id TEXT,
+  pdf_url           TEXT,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_invoices_org ON invoices(organization_id);
+CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(organization_id, status);
+CREATE INDEX IF NOT EXISTS idx_invoices_created ON invoices(organization_id, created_at DESC);
+
+-- ---------------------------------------------------------------------------
+-- Analytics (monthly aggregated data)
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS analytics_points (
+  id                TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  organization_id   TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  label             TEXT NOT NULL,
+  revenue           NUMERIC(12,2) NOT NULL DEFAULT 0,
+  customers         INT NOT NULL DEFAULT 0,
+  churn             NUMERIC(5,2) NOT NULL DEFAULT 0,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (organization_id, label)
+);
+
+CREATE INDEX IF NOT EXISTS idx_analytics_org ON analytics_points(organization_id);

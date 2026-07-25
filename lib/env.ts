@@ -17,11 +17,7 @@ export const env = {
   useMockAuth: readBool("NEXT_PUBLIC_USE_MOCK_AUTH", false),
   authSecret: read("AUTH_SECRET"),
   databaseUrl: read("DATABASE_URL"),
-  supabase: {
-    url: read("NEXT_PUBLIC_SUPABASE_URL"),
-    anonKey: read("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
-    serviceRoleKey: read("SUPABASE_SERVICE_ROLE_KEY"),
-  },
+  dbPoolMax: Number(read("DB_POOL_MAX", "5")),
   stripe: {
     secretKey: read("STRIPE_SECRET_KEY"),
     webhookSecret: read("STRIPE_WEBHOOK_SECRET"),
@@ -51,10 +47,6 @@ export const env = {
     },
   },
 } as const;
-
-export function isSupabaseConfigured(): boolean {
-  return Boolean(env.supabase.url && env.supabase.anonKey);
-}
 
 /** المفاتيح موجودة (حتى لو وهمية) */
 export function isStripeConfigured(): boolean {

@@ -182,3 +182,35 @@ INSERT INTO reports (
   ('rep_4', 'org_demo_001', 'تقرير مخصص — مصادر التسجيل', 'custom',
    '{"dimension":"source"}'::jsonb, 'user_owner_001', '2026-07-15T10:00:00Z')
 ON CONFLICT (id) DO NOTHING;
+
+-- اشتراكات المؤسسة
+INSERT INTO organization_subscriptions (
+  id, organization_id, plan_id, status, interval,
+  current_period_end, cancel_at_period_end,
+  stripe_customer_id, stripe_subscription_id, created_at
+) VALUES (
+  'sub_1', 'org_demo_001', 'pro', 'active', 'month',
+  '2026-08-24T00:00:00Z', FALSE,
+  'cus_mock_pro', 'sub_mock_pro', '2026-01-12T10:00:00Z'
+) ON CONFLICT (id) DO NOTHING;
+
+-- فواتير
+INSERT INTO invoices (
+  id, organization_id, number, amount, currency, status, created_at
+) VALUES
+  ('inv_1', 'org_demo_001', 'INV-2026-014', 1199, 'SAR', 'paid', '2026-07-01T00:00:00Z'),
+  ('inv_2', 'org_demo_001', 'INV-2026-013', 1199, 'SAR', 'paid', '2026-06-01T00:00:00Z'),
+  ('inv_3', 'org_demo_001', 'INV-2026-012', 1199, 'SAR', 'open', '2026-05-01T00:00:00Z')
+ON CONFLICT (id) DO NOTHING;
+
+-- نقاط التحليلات
+INSERT INTO analytics_points (
+  id, organization_id, label, revenue, customers, churn, created_at
+) VALUES
+  ('an_1', 'org_demo_001', 'يناير', 42000, 120, 2.1, '2026-01-31T00:00:00Z'),
+  ('an_2', 'org_demo_001', 'فبراير', 38000, 132, 2.4, '2026-02-28T00:00:00Z'),
+  ('an_3', 'org_demo_001', 'مارس', 51000, 151, 1.9, '2026-03-31T00:00:00Z'),
+  ('an_4', 'org_demo_001', 'أبريل', 47000, 168, 2.0, '2026-04-30T00:00:00Z'),
+  ('an_5', 'org_demo_001', 'مايو', 61000, 190, 1.6, '2026-05-31T00:00:00Z'),
+  ('an_6', 'org_demo_001', 'يونيو', 58000, 205, 1.8, '2026-06-30T00:00:00Z')
+ON CONFLICT (id) DO NOTHING;
