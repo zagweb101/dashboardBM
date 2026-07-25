@@ -51,8 +51,12 @@ export function StudentsModule({
 }: StudentsModuleProps) {
   const { t, locale } = useLanguage();
   const { toast } = useToast();
-  /** يُربط بـ <form id> وأزرار footer عبر form={studentFormId} */
-  const studentFormId = useId();
+  /**
+   * id ثابت بدون ":" — أوثق مع attribute form على زر الحفظ
+   * (useId يولّد :r0: وقد يفشل الربط في بعض المتصفحات)
+   */
+  const reactId = useId().replace(/:/g, "");
+  const studentFormId = `student-form-${reactId}`;
 
   const [students, setStudents] = useState(initialStudents);
   const [filters, setFilters] = useState<StudentFilters>(defaultFilters);
@@ -316,6 +320,10 @@ export function StudentsModule({
         onView={openView}
       />
 
+      {/*
+        Footer على مستوى Dialog (absolute bottom) — مضمون الظهور.
+        زر الحفظ يرسل النموذج عبر form={studentFormId}.
+      */}
       <Dialog
         open={formOpen}
         onOpenChange={(open) => {
@@ -334,7 +342,7 @@ export function StudentsModule({
             <Button
               type="button"
               variant="secondary"
-              className="w-full sm:w-auto"
+              className="h-12 w-full sm:h-11 sm:w-auto"
               onClick={() => setFormOpen(false)}
               disabled={formPending}
             >
@@ -343,7 +351,7 @@ export function StudentsModule({
             <Button
               type="submit"
               form={studentFormId}
-              className="w-full sm:w-auto sm:min-w-[8.5rem]"
+              className="h-12 w-full sm:h-11 sm:w-auto sm:min-w-[9rem]"
               disabled={formPending}
             >
               {formPending

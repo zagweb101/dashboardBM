@@ -105,11 +105,7 @@ export function StudentForm({
   const fieldError = (key: string) => state.fieldErrors?.[key];
 
   return (
-    <FormShell
-      id={formId}
-      action={formAction}
-      className="h-full min-h-0"
-    >
+    <FormShell id={formId} action={formAction}>
       {mode === "edit" && student ? (
         <input type="hidden" name="id" value={student.id} />
       ) : null}

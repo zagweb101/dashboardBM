@@ -1,15 +1,12 @@
 "use client";
 
 /**
- * Dialog — هيكل إجباري بارتفاع محدد:
+ * Dialog — هيكل بسيط ومضمون:
  *
- *   panel  (flex-col · h/max-h محدد · overflow-hidden)
+ *   panel  (relative · flex-col · ارتفاع محدد · overflow-hidden)
  *     header  (shrink-0)
- *     body    (h-0 flex-1 min-h-0 · overflow-hidden)  ← لا يتمرّر هنا
- *     footer  (shrink-0 · اختياري — دائماً ظاهر)
- *
- * ملاحظة: h-0 + flex-1 يجبر body على أخذ المساحة المتبقية فقط
- * حتى لا يتمدّد المحتوى ويدفع الأزرار خارج الشاشة.
+ *     body    (flex-1 · overflow-y-auto · pb-28 عند وجود footer)
+ *     footer  (absolute bottom-0 inset-x-0 · z-20)  ← دائماً ظاهر
  */
 import {
   useEffect,
@@ -27,7 +24,7 @@ type DialogProps = {
   title: string;
   description?: string;
   children: ReactNode;
-  /** أزرار ثابتة أسفل النافذة — خارج أي scroll */
+  /** أزرار ثابتة ملتصقة بأسفل اللوحة */
   footer?: ReactNode;
   className?: string;
   size?: "sm" | "md" | "lg" | "xl" | "full";
@@ -70,10 +67,9 @@ export function Dialog({
     window.addEventListener("keydown", onKeyDown);
 
     const timer = window.setTimeout(() => {
-      const closeBtn = panelRef.current?.querySelector<HTMLElement>(
-        '[data-dialog-close="true"]',
-      );
-      closeBtn?.focus();
+      panelRef.current
+        ?.querySelector<HTMLElement>('[data-dialog-close="true"]')
+        ?.focus();
     }, 0);
 
     return () => {
@@ -94,12 +90,12 @@ export function Dialog({
       className={cn(
         "fixed inset-0 z-[80] flex justify-center",
         "bg-slate-900/40 backdrop-blur-[3px] dark:bg-black/55",
-        "items-stretch p-0",
-        "sm:items-center sm:p-4 sm:py-6",
+        "items-stretch p-0 sm:items-center sm:p-4 sm:py-6",
       )}
       onMouseDown={handleBackdrop}
       role="presentation"
     >
+      {/* ── Panel ── */}
       <div
         ref={panelRef}
         role="dialog"
@@ -107,11 +103,11 @@ export function Dialog({
         aria-labelledby={titleId}
         aria-describedby={description ? descriptionId : undefined}
         className={cn(
-          // ★ ارتفاع محدد + عمود flex — أساس ظهور الـ footer دائماً
-          "flex w-full flex-col overflow-hidden",
+          "relative flex w-full flex-col overflow-hidden",
           "border-border bg-card text-card-foreground shadow-[var(--shadow-hover)]",
           "animate-in fade-in duration-200",
 
+          // موبايل: ملء الشاشة | ديسكتوب: 90dvh
           mobile === "full" && [
             "h-[100dvh] max-h-[100dvh] rounded-none border-0",
             "sm:h-[min(90dvh,880px)] sm:max-h-[min(90dvh,880px)]",
@@ -119,25 +115,19 @@ export function Dialog({
           ],
 
           mobile === "sheet" && [
-            "mt-auto max-h-[min(92dvh,720px)] rounded-t-3xl border border-b-0",
+            "mt-auto h-auto max-h-[min(92dvh,720px)] rounded-t-3xl border border-b-0",
             "sm:mt-0 sm:max-h-[min(85dvh,560px)] sm:rounded-2xl sm:border",
-            // sheet القصير: لا نجبر ارتفاعاً فارغاً
-            "h-auto",
           ],
 
           sizes[size],
           className,
         )}
       >
-        {/* ── Header ثابت ── */}
-        <div className="shrink-0">
-          <div
-            className="flex justify-center pt-2.5 sm:hidden"
-            aria-hidden
-          >
+        {/* ── Header ── */}
+        <div className="relative z-10 shrink-0 bg-card">
+          <div className="flex justify-center pt-2.5 sm:hidden" aria-hidden>
             <span className="h-1 w-10 rounded-full bg-muted-foreground/25" />
           </div>
-
           <header className="flex items-start justify-between gap-3 border-b border-border/80 px-4 pb-3.5 pt-2 sm:px-6 sm:pb-4 sm:pt-5">
             <div className="min-w-0 flex-1 pe-2">
               <h2
@@ -167,42 +157,27 @@ export function Dialog({
           </header>
         </div>
 
-        {/*
-          ── Body ──
-          h-0 + flex-1 = يأخذ المتبقي فقط ويمنع تمدّد المحتوى
-          ل يدفع الـ footer خارج الشاشة
-        */}
+        {/* ── Body (التمرير الوحيد) ── */}
         <div
           className={cn(
-            "flex min-h-0 flex-col overflow-hidden",
-            // full: املأ المساحة المتبقية دائماً
-            mobile === "full" && "h-0 flex-1",
-            // sheet: يتمدّد مع المحتوى حتى max-h
-            mobile === "sheet" && "min-h-0 flex-1 overflow-y-auto",
+            "flex-1 overflow-y-auto overscroll-y-contain",
+            "[-webkit-overflow-scrolling:touch]",
+            // مساحة تحت آخر حقل حتى لا يختبئ تحت الـ footer المطلق
+            footer ? "pb-28 sm:pb-32" : "pb-4",
           )}
         >
-          {/* غلاف يمرّر الارتفاع 100% لـ FormShell */}
-          <div
-            className={cn(
-              "flex min-h-0 w-full flex-col",
-              mobile === "full" && "h-full min-h-0 overflow-hidden",
-              mobile === "sheet" && "p-4 sm:p-6",
-            )}
-          >
-            {children}
-          </div>
+          <div className="px-4 pt-4 sm:px-6 sm:pt-5">{children}</div>
         </div>
 
-        {/*
-          ── Footer ثابت على مستوى الـ Dialog (خارج body/scroll) ──
-          shrink-0 + z-10 يضمن الظهور دائماً أسفل النافذة
-        */}
+        {/* ── Footer (ملتصق بالأسفل — دائماً فوق المحتوى) ── */}
         {footer ? (
           <footer
             className={cn(
-              "relative z-10 shrink-0 border-t border-border/80 bg-card",
+              "absolute inset-x-0 bottom-0 z-20",
+              "border-t border-border bg-card",
               "px-4 pt-3 sm:px-6 sm:pt-4",
-              "pb-safe pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-5",
+              "pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-5",
+              "shadow-[0_-4px_16px_rgba(15,23,42,0.06)]",
             )}
           >
             {footer}

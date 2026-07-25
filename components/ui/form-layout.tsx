@@ -1,16 +1,13 @@
 /**
- * تخطيط نماذج داخل Dialog
+ * تخطيط نماذج
  *
- * المفضّل للنماذج الطويلة:
- *   Dialog.footer  ← الأزرار (مضمونة الظهور)
- *   FormShell      ← المحتوى فقط (scroll) بدون actions
- *
- * actions اختياري للتوافق مع نماذج أخرى؛ يُفضَّل Dialog footer.
+ * داخل Dialog: التمرير والأزرار على مستوى Dialog.
+ * FormShell = <form> بسيط للحقول فقط (بدون scroll/footer خاص).
  */
 import type { FormHTMLAttributes, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-/** غلاف النموذج — محتوى قابل للتمرير؛ الأزرار عبر Dialog footer أفضل */
+/** غلاف النموذج — محتوى فقط؛ الأزرار عبر Dialog footer */
 export function FormShell({
   children,
   actions,
@@ -18,39 +15,14 @@ export function FormShell({
   ...props
 }: FormHTMLAttributes<HTMLFormElement> & {
   children: ReactNode;
-  /** @deprecated للنماذج داخل Dialog استخدم prop footer على Dialog */
+  /** اختياري — يُفضَّل Dialog footer */
   actions?: ReactNode;
 }) {
   return (
-    <form
-      className={cn(
-        "grid h-full min-h-0 w-full max-h-full overflow-hidden",
-        actions
-          ? "grid-rows-[minmax(0,1fr)_auto]"
-          : "grid-rows-[minmax(0,1fr)]",
-        className,
-      )}
-      {...props}
-    >
-      <div
-        className={cn(
-          "min-h-0 overflow-y-auto overscroll-y-contain",
-          "[-webkit-overflow-scrolling:touch]",
-          "px-4 pt-4 sm:px-6 sm:pt-5",
-          actions ? "pb-6 sm:pb-8" : "pb-5 sm:pb-6",
-        )}
-      >
-        <div className="flex flex-col gap-5 sm:gap-6">{children}</div>
-      </div>
-
+    <form className={cn("w-full", className)} {...props}>
+      <div className="flex flex-col gap-5 sm:gap-6">{children}</div>
       {actions ? (
-        <div
-          className={cn(
-            "flex-shrink-0 border-t border-border/80 bg-card",
-            "px-4 pt-3 sm:px-6 sm:pt-4",
-            "pb-safe pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-5",
-          )}
-        >
+        <div className="mt-6 flex flex-col gap-2.5 border-t border-border/80 pt-4 sm:flex-row sm:justify-end">
           {actions}
         </div>
       ) : null}
@@ -58,11 +30,7 @@ export function FormShell({
   );
 }
 
-/**
- * شبكة حقول:
- * - موبايل: عمود واحد
- * - sm+: عمودان
- */
+/** شبكة حقول: عمود على الموبايل · عمودان من sm+ */
 export function FormGrid({
   children,
   className,
@@ -83,7 +51,7 @@ export function FormGrid({
   );
 }
 
-/** حقل بعرض كامل داخل FormGrid */
+/** حقل بعرض كامل */
 export function FormFull({
   children,
   className,
@@ -129,11 +97,7 @@ export function FormSection({
   );
 }
 
-/**
- * أزرار النموذج:
- * - موبايل: full-width · عمودي · الحفظ فوق الإلغاء (flex-col-reverse مع ترتيب DOM: إلغاء ثم حفظ)
- * - sm+: صف أفقي محاذاة النهاية
- */
+/** أزرار — full-width على الموبايل */
 export function FormActions({
   children,
   className,
@@ -154,7 +118,7 @@ export function FormActions({
   );
 }
 
-/** تنبيه أعلى النموذج */
+/** تنبيه */
 export function FormAlert({
   tone = "error",
   children,
