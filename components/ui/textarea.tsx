@@ -19,22 +19,33 @@ export function Textarea({
   const areaId = id ?? props.name;
 
   return (
-    <label className="block space-y-1.5" htmlFor={areaId}>
-      {label ? <span className="text-sm font-semibold">{label}</span> : null}
+    <label className="block min-w-0 space-y-1.5" htmlFor={areaId}>
+      {label ? (
+        <span className="block text-sm font-semibold text-foreground/90">
+          {label}
+        </span>
+      ) : null}
       <textarea
         id={areaId}
         rows={rows}
         className={cn(
-          "w-full resize-y rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15",
-          error && "border-danger focus:border-danger focus:ring-danger/15",
+          "w-full min-w-0 max-w-full resize-y rounded-2xl border border-border/90 bg-background",
+          "px-3.5 py-3 text-base text-foreground outline-none transition-all duration-200 sm:text-sm",
+          "placeholder:text-muted-foreground/70",
+          "hover:border-border",
+          "focus:border-primary/50 focus:ring-4 focus:ring-primary/10",
+          "disabled:cursor-not-allowed disabled:opacity-60",
+          error && "border-danger/70 focus:border-danger focus:ring-danger/15",
           className,
         )}
         {...props}
       />
       {error ? (
-        <span className="text-xs text-danger">{error}</span>
+        <span className="block text-xs leading-5 text-danger">{error}</span>
       ) : hint ? (
-        <span className="text-xs text-muted-foreground">{hint}</span>
+        <span className="block text-xs leading-5 text-muted-foreground">
+          {hint}
+        </span>
       ) : null}
     </label>
   );

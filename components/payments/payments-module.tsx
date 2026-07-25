@@ -28,6 +28,13 @@ import {
   getEmptyCopy,
 } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
+import {
+  FormActions,
+  FormAlert,
+  FormFull,
+  FormGrid,
+  FormShell,
+} from "@/components/ui/form-layout";
 import { useToast } from "@/components/ui/toast";
 import { useLanguage } from "@/components/providers/language-provider";
 import {
@@ -352,13 +359,36 @@ export function PaymentsModule({
         }
         size="lg"
       >
-        <form action={onCreate} className="space-y-4">
-          {formError ? (
-            <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-              {formError}
-            </p>
-          ) : null}
-          <div className="grid gap-4 md:grid-cols-2">
+        <FormShell
+          action={onCreate}
+          actions={
+            <FormActions>
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full sm:w-auto"
+                onClick={() => setFormOpen(false)}
+              >
+                {ar ? "إلغاء" : "Cancel"}
+              </Button>
+              <Button
+                type="submit"
+                className="w-full sm:w-auto sm:min-w-[8rem]"
+                disabled={pending}
+              >
+                {pending
+                  ? ar
+                    ? "جارٍ الحفظ..."
+                    : "Saving..."
+                  : ar
+                    ? "حفظ الدفعة"
+                    : "Save payment"}
+              </Button>
+            </FormActions>
+          }
+        >
+          {formError ? <FormAlert tone="error">{formError}</FormAlert> : null}
+          <FormGrid>
             <Select
               name="studentId"
               label={ar ? "المتدرب" : "Student"}
@@ -397,6 +427,7 @@ export function PaymentsModule({
               label={ar ? "المبلغ (ر.س)" : "Amount (SAR)"}
               required
               error={fieldErrors.amount}
+              inputMode="decimal"
             />
             <Select
               name="method"
@@ -422,38 +453,24 @@ export function PaymentsModule({
               type="datetime-local"
               label={ar ? "تاريخ الدفع" : "Paid at"}
             />
-            <Input
-              name="reference"
-              label={ar ? "المرجع / رقم الإيصال" : "Reference / receipt"}
-              placeholder="TRX-..."
-            />
-            <div className="md:col-span-2">
+            <FormFull>
+              <Input
+                name="reference"
+                label={ar ? "المرجع / رقم الإيصال" : "Reference / receipt"}
+                placeholder="TRX-..."
+                dir="ltr"
+                className="text-start"
+              />
+            </FormFull>
+            <FormFull>
               <Textarea
                 name="notes"
                 label={ar ? "ملاحظات" : "Notes"}
                 rows={2}
               />
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 border-t border-border pt-4">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setFormOpen(false)}
-            >
-              {ar ? "إلغاء" : "Cancel"}
-            </Button>
-            <Button type="submit" disabled={pending}>
-              {pending
-                ? ar
-                  ? "جارٍ الحفظ..."
-                  : "Saving..."
-                : ar
-                  ? "حفظ الدفعة"
-                  : "Save payment"}
-            </Button>
-          </div>
-        </form>
+            </FormFull>
+          </FormGrid>
+        </FormShell>
       </Dialog>
 
       <ConfirmDialog

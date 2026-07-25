@@ -11,6 +11,11 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { Select } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import {
+  FormActions,
+  FormAlert,
+  FormShell,
+} from "@/components/ui/form-layout";
 import { useToast } from "@/components/ui/toast";
 import { useLanguage } from "@/components/providers/language-provider";
 import {
@@ -305,64 +310,71 @@ export function CourseDetail({
         description={course.title}
         size="md"
       >
-        <form action={onEnroll} className="space-y-4">
+        <FormShell
+          action={onEnroll}
+          actions={
+            <FormActions>
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full sm:w-auto"
+                onClick={() => setEnrollOpen(false)}
+              >
+                {ar ? "إلغاء" : "Cancel"}
+              </Button>
+              <Button
+                type="submit"
+                className="w-full sm:w-auto sm:min-w-[8rem]"
+                disabled={pending || availableStudents.length === 0}
+              >
+                {pending
+                  ? ar
+                    ? "جارٍ التسجيل..."
+                    : "Enrolling..."
+                  : ar
+                    ? "تأكيد التسجيل"
+                    : "Confirm enrollment"}
+              </Button>
+            </FormActions>
+          }
+        >
           <input type="hidden" name="courseId" value={course.id} />
-          {formError ? (
-            <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-              {formError}
-            </p>
-          ) : null}
-          <Select
-            name="studentId"
-            label={ar ? "المتدرب" : "Student"}
-            required
-            options={[
-              {
-                value: "",
-                label: ar ? "اختر متدرباً" : "Select student",
-                disabled: true,
-              },
-              ...availableStudents.map((s) => ({
-                value: s.id,
-                label: `${s.fullName} (${s.code})`,
-              })),
-            ]}
-            defaultValue=""
-          />
-          <Input
-            name="priceAgreed"
-            type="number"
-            min={0}
-            label={ar ? "المبلغ المتفق (اختياري)" : "Agreed fee (optional)"}
-            placeholder={String(course.price)}
-          />
-          <Input
-            name="notes"
-            label={ar ? "ملاحظات" : "Notes"}
-            placeholder={ar ? "اختياري" : "Optional"}
-          />
-          <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setEnrollOpen(false)}
-            >
-              {ar ? "إلغاء" : "Cancel"}
-            </Button>
-            <Button
-              type="submit"
-              disabled={pending || availableStudents.length === 0}
-            >
-              {pending
-                ? ar
-                  ? "جارٍ التسجيل..."
-                  : "Enrolling..."
-                : ar
-                  ? "تأكيد التسجيل"
-                  : "Confirm enrollment"}
-            </Button>
+          {formError ? <FormAlert tone="error">{formError}</FormAlert> : null}
+          <div className="space-y-4">
+            <Select
+              name="studentId"
+              label={ar ? "المتدرب" : "Student"}
+              required
+              options={[
+                {
+                  value: "",
+                  label: ar ? "اختر متدرباً" : "Select student",
+                  disabled: true,
+                },
+                ...availableStudents.map((s) => ({
+                  value: s.id,
+                  label: `${s.fullName} (${s.code})`,
+                })),
+              ]}
+              defaultValue=""
+            />
+            <Input
+              name="priceAgreed"
+              type="number"
+              min={0}
+              label={
+                ar ? "المبلغ المتفق (اختياري)" : "Agreed fee (optional)"
+              }
+              placeholder={String(course.price)}
+              inputMode="decimal"
+            />
+            <Input
+              name="notes"
+              label={ar ? "ملاحظات" : "Notes"}
+              placeholder={ar ? "اختياري" : "Optional"}
+            />
           </div>
-        </form>
+        </FormShell>
       </Dialog>
     </div>
   );

@@ -15,6 +15,7 @@ type ConfirmDialogProps = {
   onConfirm: () => void | Promise<void>;
 };
 
+/** تأكيد حذف — أزرار full-width على الموبايل */
 export function ConfirmDialog({
   open,
   onOpenChange,
@@ -31,13 +32,14 @@ export function ConfirmDialog({
       open={open}
       onOpenChange={onOpenChange}
       title={title}
-      size="md"
+      size="sm"
+      mobile="sheet"
       footer={
-        <div className="flex flex-wrap justify-end gap-2">
+        <div className="flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-end sm:gap-3">
           <Button
             type="button"
             variant="secondary"
-            size="sm"
+            className="w-full sm:w-auto"
             disabled={loading}
             onClick={() => onOpenChange(false)}
           >
@@ -46,7 +48,7 @@ export function ConfirmDialog({
           <Button
             type="button"
             variant={tone === "danger" ? "danger" : "primary"}
-            size="sm"
+            className="w-full sm:w-auto sm:min-w-[6rem]"
             disabled={loading}
             onClick={() => void onConfirm()}
           >

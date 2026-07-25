@@ -119,3 +119,20 @@ h3 {
 .animate-in.fade-in {
   animation: fade-in 0.28s ease-out both;
 }
+
+/* منع overflow أفقي شائع مع الحقول والتواريخ على الموبايل */
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"],
+input[type="number"],
+select,
+textarea {
+  max-width: 100%;
+}
+
+/* safe area للنماذج على iPhone */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

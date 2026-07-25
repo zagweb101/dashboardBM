@@ -17,6 +17,13 @@ import {
   getEmptyCopy,
 } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
+import {
+  FormActions,
+  FormAlert,
+  FormFull,
+  FormGrid,
+  FormShell,
+} from "@/components/ui/form-layout";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { useLanguage } from "@/components/providers/language-provider";
 import { useToast } from "@/components/ui/toast";
@@ -318,22 +325,48 @@ export function CustomersModule({
         }
         size="lg"
       >
-        <form action={formAction} className="space-y-4">
+        <FormShell
+          action={formAction}
+          actions={
+            <FormActions>
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full sm:w-auto"
+                onClick={() => setFormOpen(false)}
+              >
+                {ar ? "إلغاء" : "Cancel"}
+              </Button>
+              <Button
+                type="submit"
+                className="w-full sm:w-auto sm:min-w-[7rem]"
+                disabled={pending}
+              >
+                {pending
+                  ? ar
+                    ? "جارٍ الحفظ..."
+                    : "Saving..."
+                  : ar
+                    ? "حفظ"
+                    : "Save"}
+              </Button>
+            </FormActions>
+          }
+        >
           {mode === "edit" && editing ? (
             <input type="hidden" name="id" value={editing.id} />
           ) : null}
           {state.error && !state.success ? (
-            <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-              {state.error}
-            </p>
+            <FormAlert tone="error">{state.error}</FormAlert>
           ) : null}
-          <div className="grid gap-4 md:grid-cols-2">
+          <FormGrid>
             <Input
               name="name"
               label={ar ? "الاسم" : "Name"}
               defaultValue={editing?.name}
               required
               error={state.fieldErrors?.name}
+              autoComplete="name"
             />
             <Input
               name="email"
@@ -342,11 +375,17 @@ export function CustomersModule({
               defaultValue={editing?.email}
               required
               error={state.fieldErrors?.email}
+              dir="ltr"
+              className="text-start"
+              autoComplete="email"
             />
             <Input
               name="phone"
               label={ar ? "الجوال" : "Phone"}
               defaultValue={editing?.phone}
+              dir="ltr"
+              className="text-start"
+              inputMode="tel"
             />
             <Input
               name="company"
@@ -362,34 +401,16 @@ export function CustomersModule({
               }))}
               defaultValue={editing?.status ?? "lead"}
             />
-            <div className="md:col-span-2">
+            <FormFull>
               <Textarea
                 name="notes"
                 label={ar ? "ملاحظات" : "Notes"}
                 defaultValue={editing?.notes}
                 rows={3}
               />
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 border-t border-border pt-4">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setFormOpen(false)}
-            >
-              {ar ? "إلغاء" : "Cancel"}
-            </Button>
-            <Button type="submit" disabled={pending}>
-              {pending
-                ? ar
-                  ? "جارٍ الحفظ..."
-                  : "Saving..."
-                : ar
-                  ? "حفظ"
-                  : "Save"}
-            </Button>
-          </div>
-        </form>
+            </FormFull>
+          </FormGrid>
+        </FormShell>
       </Dialog>
 
       <ConfirmDialog

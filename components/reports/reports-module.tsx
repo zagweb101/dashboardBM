@@ -17,6 +17,12 @@ import {
   getEmptyCopy,
 } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
+import {
+  FormActions,
+  FormAlert,
+  FormGrid,
+  FormShell,
+} from "@/components/ui/form-layout";
 import { useLanguage } from "@/components/providers/language-provider";
 import { useToast } from "@/components/ui/toast";
 import {
@@ -189,57 +195,75 @@ export function ReportsModule({
         }
         size="lg"
       >
-        <form action={formAction} className="space-y-4">
+        <FormShell
+          action={formAction}
+          actions={
+            <FormActions>
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full sm:w-auto"
+                onClick={() => setFormOpen(false)}
+              >
+                {ar ? "إلغاء" : "Cancel"}
+              </Button>
+              <Button
+                type="submit"
+                className="w-full sm:w-auto sm:min-w-[8rem]"
+                disabled={pending}
+              >
+                {pending
+                  ? ar
+                    ? "جارٍ الحفظ..."
+                    : "Saving..."
+                  : ar
+                    ? "إنشاء التقرير"
+                    : "Create report"}
+              </Button>
+            </FormActions>
+          }
+        >
           {state.error && !state.success ? (
-            <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-              {state.error}
-            </p>
+            <FormAlert tone="error">{state.error}</FormAlert>
           ) : null}
-          <Input
-            name="title"
-            label={ar ? "العنوان" : "Title"}
-            required
-            error={state.fieldErrors?.title}
-            placeholder={
-              ar ? "مثال: حضور دورة أساسيات" : "e.g. Basics course attendance"
-            }
-          />
-          <Select
-            name="type"
-            label={ar ? "النوع" : "Type"}
-            options={REPORT_TYPES.map((t) => ({
-              value: t,
-              label: labelReportType(t, locale),
-            }))}
-            defaultValue="custom"
-          />
-          <Textarea
-            name="filters"
-            label={ar ? "فلاتر (JSON اختياري)" : "Filters (optional JSON)"}
-            rows={4}
-            placeholder='{"month":"2026-07"}'
-            error={state.fieldErrors?.filters}
-            dir="ltr"
-          />
-          <div className="flex justify-end gap-2 border-t border-border pt-4">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setFormOpen(false)}
-            >
-              {ar ? "إلغاء" : "Cancel"}
-            </Button>
-            <Button type="submit" disabled={pending}>
-              {pending
-                ? ar
-                  ? "جارٍ الحفظ..."
-                  : "Saving..."
-                : ar
-                  ? "إنشاء التقرير"
-                  : "Create report"}
-            </Button>
-          </div>
-        </form>
+          <FormGrid>
+            <div className="sm:col-span-2">
+              <Input
+                name="title"
+                label={ar ? "العنوان" : "Title"}
+                required
+                error={state.fieldErrors?.title}
+                placeholder={
+                  ar
+                    ? "مثال: حضور دورة أساسيات"
+                    : "e.g. Basics course attendance"
+                }
+              />
+            </div>
+            <Select
+              name="type"
+              label={ar ? "النوع" : "Type"}
+              options={REPORT_TYPES.map((t) => ({
+                value: t,
+                label: labelReportType(t, locale),
+              }))}
+              defaultValue="custom"
+            />
+            <div className="sm:col-span-2">
+              <Textarea
+                name="filters"
+                label={
+                  ar ? "فلاتر (JSON اختياري)" : "Filters (optional JSON)"
+                }
+                rows={4}
+                placeholder='{"month":"2026-07"}'
+                error={state.fieldErrors?.filters}
+                dir="ltr"
+                className="text-start font-mono text-xs sm:text-sm"
+              />
+            </div>
+          </FormGrid>
+        </FormShell>
       </Dialog>
 
       <ConfirmDialog
