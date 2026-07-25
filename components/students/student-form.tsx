@@ -97,8 +97,10 @@ export function StudentForm({
   return (
     <FormShell
       action={formAction}
+      className="h-full min-h-0"
       actions={
         <FormActions>
+          {/* DOM: إلغاء ثم حفظ — flex-col-reverse يعرض الحفظ فوق الإلغاء على الموبايل */}
           {onCancel ? (
             <Button
               type="button"
@@ -136,15 +138,6 @@ export function StudentForm({
         </FormAlert>
       ) : null}
 
-      {/*
-        ترتيب الحقول:
-        1) الاسم + الجوال
-        2) البريد + الحالة
-        3) المستوى + مصدر التسجيل
-        4) تفاصيل إضافية (جنس، مدينة، …)
-        5) جهة اتصال الطوارئ
-        6) الملاحظات (عرض كامل)
-      */}
       <FormSection
         title={ar ? "البيانات الأساسية" : "Basic info"}
         description={
@@ -154,7 +147,6 @@ export function StudentForm({
         }
       >
         <FormGrid>
-          {/* الصف 1: الاسم الكامل + رقم الجوال */}
           <Input
             name="fullName"
             label={t("fullName")}
@@ -177,7 +169,6 @@ export function StudentForm({
             autoComplete="tel"
           />
 
-          {/* الصف 2: البريد + الحالة */}
           <Input
             name="email"
             type="email"
@@ -198,7 +189,6 @@ export function StudentForm({
             error={fieldError("status")}
           />
 
-          {/* الصف 3: المستوى + مصدر التسجيل */}
           <Select
             name="level"
             label={t("level")}
@@ -293,20 +283,18 @@ export function StudentForm({
       </FormSection>
 
       <FormSection title={t("notes")}>
-        <FormFull>
-          <Textarea
-            name="notes"
-            label={ar ? "ملاحظات داخلية" : "Internal notes"}
-            defaultValue={student?.notes}
-            error={fieldError("notes")}
-            rows={4}
-            placeholder={
-              ar
-                ? "ملاحظات داخلية عن المتدرب..."
-                : "Internal notes about the student..."
-            }
-          />
-        </FormFull>
+        <Textarea
+          name="notes"
+          label={ar ? "ملاحظات داخلية" : "Internal notes"}
+          defaultValue={student?.notes}
+          error={fieldError("notes")}
+          rows={4}
+          placeholder={
+            ar
+              ? "ملاحظات داخلية عن المتدرب..."
+              : "Internal notes about the student..."
+          }
+        />
       </FormSection>
     </FormShell>
   );

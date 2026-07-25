@@ -1,15 +1,17 @@
 /**
  * تخطيط نماذج داخل Dialog
  *
- * الهيكل:
- *   form   (flex-col · flex-1 · min-h-0 · overflow-hidden)
- *     scroll (flex-1 · min-h-0 · overflow-y-auto)  ← الحقول فقط
- *     footer (shrink-0)  ← أزرار ثابتة أسفل الـ Dialog
+ * الهيكل الإجباري (FormShell):
+ *   form   (grid · h-full · rows: 1fr / auto · overflow-hidden)
+ *     scroll  (minmax(0,1fr) · overflow-y-auto)  ← الحقول فقط
+ *     footer  (auto · shrink-0)                    ← أزرار ثابتة — ليست داخل scroll
+ *
+ * يعتمد على أن Dialog body يمرّر ارتفاعاً محدوداً (h-0 flex-1).
  */
 import type { FormHTMLAttributes, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-/** غلاف النموذج داخل Dialog — Header في Dialog، Content + Footer هنا */
+/** غلاف النموذج: محتوى قابل للتمرير + أزرار ثابتة في الأسفل */
 export function FormShell({
   children,
   actions,
@@ -17,37 +19,42 @@ export function FormShell({
   ...props
 }: FormHTMLAttributes<HTMLFormElement> & {
   children: ReactNode;
-  /** أزرار الحفظ/الإلغاء — ثابتة في الأسفل خارج منطقة التمرير */
+  /** أزرار الحفظ/الإلغاء — تُعرض دائماً أسفل الـ Dialog (خارج الـ scroll) */
   actions?: ReactNode;
 }) {
   return (
     <form
       className={cn(
-        "flex min-h-0 w-full flex-1 flex-col overflow-hidden",
+        // CSS Grid أوثق من flex لتثبيت الـ footer
+        "grid h-full min-h-0 w-full max-h-full overflow-hidden",
+        actions
+          ? "grid-rows-[minmax(0,1fr)_auto]"
+          : "grid-rows-[minmax(0,1fr)]",
         className,
       )}
       {...props}
     >
-      {/* Content: منطقة التمرير الوحيدة */}
+      {/* ★ Content — المنطقة الوحيدة القابلة للتمرير */}
       <div
         className={cn(
-          "min-h-0 flex-1 overflow-y-auto overscroll-y-contain",
+          "min-h-0 overflow-y-auto overscroll-y-contain",
           "[-webkit-overflow-scrolling:touch]",
-          // مسافات داخلية واضحة — أول حقل ظاهر من البداية
           "px-4 pt-4 sm:px-6 sm:pt-5",
-          actions ? "pb-5 sm:pb-6" : "pb-4 sm:pb-5",
+          // مسافة سفلية حتى لا يلتصق آخر حقل بخط الأزرار
+          actions ? "pb-6 sm:pb-8" : "pb-4 sm:pb-5",
         )}
       >
         <div className="flex flex-col gap-5 sm:gap-6">{children}</div>
       </div>
 
-      {/* Footer ثابت — خارج الـ scroll */}
+      {/* ★ Footer — ثابت، خارج overflow-y-auto */}
       {actions ? (
         <div
           className={cn(
-            "shrink-0 border-t border-border/80 bg-card",
+            "flex-shrink-0 border-t border-border/80 bg-card",
             "px-4 pt-3 sm:px-6 sm:pt-4",
-            "pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-5",
+            // safe-area لشريط Home على iPhone
+            "pb-safe pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-5",
           )}
         >
           {actions}
@@ -59,7 +66,7 @@ export function FormShell({
 
 /**
  * شبكة حقول:
- * - موبايل: عمود واحد (كل حقل في صف)
+ * - موبايل: عمود واحد
  * - sm+: عمودان
  */
 export function FormGrid({
@@ -90,10 +97,12 @@ export function FormFull({
   children: ReactNode;
   className?: string;
 }) {
-  return <div className={cn("min-w-0 sm:col-span-2", className)}>{children}</div>;
+  return (
+    <div className={cn("min-w-0 sm:col-span-2", className)}>{children}</div>
+  );
 }
 
-/** قسم فرعي بعناوين واضحة */
+/** قسم فرعي */
 export function FormSection({
   title,
   description,
@@ -126,7 +135,11 @@ export function FormSection({
   );
 }
 
-/** أزرار — full-width على الموبايل، صف أفقي على sm+ */
+/**
+ * أزرار النموذج:
+ * - موبايل: full-width · عمودي · الحفظ فوق الإلغاء (flex-col-reverse مع ترتيب DOM: إلغاء ثم حفظ)
+ * - sm+: صف أفقي محاذاة النهاية
+ */
 export function FormActions({
   children,
   className,

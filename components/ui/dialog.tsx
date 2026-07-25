@@ -1,15 +1,15 @@
 "use client";
 
 /**
- * Dialog — Header ثابت + Body مرن (min-h-0) + Footer اختياري
+ * Dialog — هيكل إجباري بارتفاع محدد:
  *
- * الهيكل:
- *   overlay
- *     panel (flex-col · ارتفاع محدود · overflow-hidden)
- *       handle (موبايل)
- *       header (shrink-0)
- *       body   (flex-1 · min-h-0 · flex-col · overflow-hidden)
- *       footer (shrink-0 · اختياري)
+ *   panel  (flex-col · h/max-h محدد · overflow-hidden)
+ *     header  (shrink-0)
+ *     body    (h-0 flex-1 min-h-0 · overflow-hidden)  ← لا يتمرّر هنا
+ *     footer  (shrink-0 · اختياري — دائماً ظاهر)
+ *
+ * ملاحظة: h-0 + flex-1 يجبر body على أخذ المساحة المتبقية فقط
+ * حتى لا يتمدّد المحتوى ويدفع الأزرار خارج الشاشة.
  */
 import {
   useEffect,
@@ -27,10 +27,11 @@ type DialogProps = {
   title: string;
   description?: string;
   children: ReactNode;
+  /** أزرار ثابتة أسفل النافذة — خارج أي scroll */
   footer?: ReactNode;
   className?: string;
   size?: "sm" | "md" | "lg" | "xl" | "full";
-  /** full = 100dvh على الموبايل | sheet = من الأسفل */
+  /** full = شاشة كاملة على الموبايل | sheet = من الأسفل */
   mobile?: "full" | "sheet";
 };
 
@@ -68,7 +69,6 @@ export function Dialog({
     };
     window.addEventListener("keydown", onKeyDown);
 
-    // ركّز زر الإغلاق فقط — لا تقفز لمدخل قد يمرّر المحتوى لأسفل
     const timer = window.setTimeout(() => {
       const closeBtn = panelRef.current?.querySelector<HTMLElement>(
         '[data-dialog-close="true"]',
@@ -107,77 +107,99 @@ export function Dialog({
         aria-labelledby={titleId}
         aria-describedby={description ? descriptionId : undefined}
         className={cn(
-          "flex w-full min-h-0 flex-col overflow-hidden",
+          // ★ ارتفاع محدد + عمود flex — أساس ظهور الـ footer دائماً
+          "flex w-full flex-col overflow-hidden",
           "border-border bg-card text-card-foreground shadow-[var(--shadow-hover)]",
           "animate-in fade-in duration-200",
 
           mobile === "full" && [
-            // ارتفاع صريح → body + FormShell يتمكنان من flex-1 + overflow
             "h-[100dvh] max-h-[100dvh] rounded-none border-0",
             "sm:h-[min(90dvh,880px)] sm:max-h-[min(90dvh,880px)]",
             "sm:rounded-2xl sm:border",
           ],
 
           mobile === "sheet" && [
-            "mt-auto max-h-[min(92dvh,640px)] rounded-t-3xl border border-b-0",
-            "sm:mt-0 sm:max-h-[min(85dvh,520px)] sm:rounded-2xl sm:border",
+            "mt-auto max-h-[min(92dvh,720px)] rounded-t-3xl border border-b-0",
+            "sm:mt-0 sm:max-h-[min(85dvh,560px)] sm:rounded-2xl sm:border",
+            // sheet القصير: لا نجبر ارتفاعاً فارغاً
+            "h-auto",
           ],
 
           sizes[size],
           className,
         )}
       >
-        {/* مقبض (موبايل) */}
-        <div
-          className="flex shrink-0 justify-center pt-2.5 sm:hidden"
-          aria-hidden
-        >
-          <span className="h-1 w-10 rounded-full bg-muted-foreground/25" />
-        </div>
-
-        {/* Header ثابت */}
-        <header className="flex shrink-0 items-start justify-between gap-3 border-b border-border/80 px-4 pb-3.5 pt-2 sm:px-6 sm:pb-4 sm:pt-5">
-          <div className="min-w-0 flex-1 pe-2">
-            <h2
-              id={titleId}
-              className="text-base font-extrabold tracking-tight text-card-foreground sm:text-lg"
-            >
-              {title}
-            </h2>
-            {description ? (
-              <p
-                id={descriptionId}
-                className="mt-1 text-sm leading-6 text-muted-foreground"
-              >
-                {description}
-              </p>
-            ) : null}
-          </div>
-          <button
-            type="button"
-            data-dialog-close="true"
-            onClick={() => onOpenChange(false)}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition hover:bg-muted hover:text-foreground active:scale-95"
-            aria-label="Close"
+        {/* ── Header ثابت ── */}
+        <div className="shrink-0">
+          <div
+            className="flex justify-center pt-2.5 sm:hidden"
+            aria-hidden
           >
-            <X className="h-5 w-5" />
-          </button>
-        </header>
+            <span className="h-1 w-10 rounded-full bg-muted-foreground/25" />
+          </div>
+
+          <header className="flex items-start justify-between gap-3 border-b border-border/80 px-4 pb-3.5 pt-2 sm:px-6 sm:pb-4 sm:pt-5">
+            <div className="min-w-0 flex-1 pe-2">
+              <h2
+                id={titleId}
+                className="text-base font-extrabold tracking-tight text-card-foreground sm:text-lg"
+              >
+                {title}
+              </h2>
+              {description ? (
+                <p
+                  id={descriptionId}
+                  className="mt-1 text-sm leading-6 text-muted-foreground"
+                >
+                  {description}
+                </p>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              data-dialog-close="true"
+              onClick={() => onOpenChange(false)}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition hover:bg-muted hover:text-foreground active:scale-95"
+              aria-label="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </header>
+        </div>
 
         {/*
-          Body: flex-1 + min-h-0 حتى FormShell يتمكن من التمرير
-          overflow-hidden يمنع قصّ المحتوى خارج المنطقة المرنة
+          ── Body ──
+          h-0 + flex-1 = يأخذ المتبقي فقط ويمنع تمدّد المحتوى
+          ل يدفع الـ footer خارج الشاشة
         */}
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          {children}
+        <div
+          className={cn(
+            "flex min-h-0 flex-col overflow-hidden",
+            // full: املأ المساحة المتبقية دائماً
+            mobile === "full" && "h-0 flex-1",
+            // sheet: يتمدّد مع المحتوى حتى max-h
+            mobile === "sheet" && "min-h-0 flex-1 overflow-y-auto",
+          )}
+        >
+          {/* غلاف يمرّر الارتفاع 100% لـ FormShell */}
+          <div
+            className={cn(
+              "flex min-h-0 w-full flex-col",
+              mobile === "full" && "h-full min-h-0 overflow-hidden",
+              mobile === "sheet" && "p-4 sm:p-6",
+            )}
+          >
+            {children}
+          </div>
         </div>
 
+        {/* ── Footer ثابت (Dialog-level) ── */}
         {footer ? (
           <footer
             className={cn(
-              "shrink-0 border-t border-border/80 bg-muted/25 px-4 py-3",
-              "pb-[max(0.75rem,env(safe-area-inset-bottom))]",
-              "sm:px-6 sm:py-4",
+              "shrink-0 border-t border-border/80 bg-card",
+              "px-4 pt-3 sm:px-6 sm:pt-4",
+              "pb-safe pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-5",
             )}
           >
             {footer}
