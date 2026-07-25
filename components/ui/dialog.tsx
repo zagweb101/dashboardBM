@@ -193,11 +193,14 @@ export function Dialog({
           </div>
         </div>
 
-        {/* ── Footer ثابت (Dialog-level) ── */}
+        {/*
+          ── Footer ثابت على مستوى الـ Dialog (خارج body/scroll) ──
+          shrink-0 + z-10 يضمن الظهور دائماً أسفل النافذة
+        */}
         {footer ? (
           <footer
             className={cn(
-              "shrink-0 border-t border-border/80 bg-card",
+              "relative z-10 shrink-0 border-t border-border/80 bg-card",
               "px-4 pt-3 sm:px-6 sm:pt-4",
               "pb-safe pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-5",
             )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useId, useMemo, useState, useTransition } from "react";
 import { Download, Plus, RefreshCw } from "lucide-react";
 import type {
   Student,
@@ -11,6 +11,7 @@ import type {
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { FormActions } from "@/components/ui/form-layout";
 import { useToast } from "@/components/ui/toast";
 import { useLanguage } from "@/components/providers/language-provider";
 import { deleteStudentAction } from "@/lib/students/actions";
@@ -50,6 +51,8 @@ export function StudentsModule({
 }: StudentsModuleProps) {
   const { t, locale } = useLanguage();
   const { toast } = useToast();
+  /** يُربط بـ <form id> وأزرار footer عبر form={studentFormId} */
+  const studentFormId = useId();
 
   const [students, setStudents] = useState(initialStudents);
   const [filters, setFilters] = useState<StudentFilters>(defaultFilters);
@@ -62,6 +65,7 @@ export function StudentsModule({
   const [formOpen, setFormOpen] = useState(false);
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [editing, setEditing] = useState<Student | null>(null);
+  const [formPending, setFormPending] = useState(false);
 
   const [viewing, setViewing] = useState<Student | null>(null);
   const [viewOpen, setViewOpen] = useState(false);
@@ -314,7 +318,10 @@ export function StudentsModule({
 
       <Dialog
         open={formOpen}
-        onOpenChange={setFormOpen}
+        onOpenChange={(open) => {
+          setFormOpen(open);
+          if (!open) setFormPending(false);
+        }}
         title={formMode === "create" ? t("addStudent") : t("editStudent")}
         description={
           formMode === "create"
@@ -322,12 +329,38 @@ export function StudentsModule({
             : t("editStudentCopy")
         }
         size="xl"
+        footer={
+          <FormActions>
+            <Button
+              type="button"
+              variant="secondary"
+              className="w-full sm:w-auto"
+              onClick={() => setFormOpen(false)}
+              disabled={formPending}
+            >
+              {t("cancel")}
+            </Button>
+            <Button
+              type="submit"
+              form={studentFormId}
+              className="w-full sm:w-auto sm:min-w-[8.5rem]"
+              disabled={formPending}
+            >
+              {formPending
+                ? t("saving")
+                : formMode === "create"
+                  ? t("addStudent")
+                  : t("save")}
+            </Button>
+          </FormActions>
+        }
       >
         <StudentForm
           key={editing?.id ?? "create"}
+          formId={studentFormId}
           mode={formMode}
           student={editing ?? undefined}
-          onCancel={() => setFormOpen(false)}
+          onPendingChange={setFormPending}
           onSuccess={handleSuccess}
         />
       </Dialog>

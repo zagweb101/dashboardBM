@@ -8,12 +8,10 @@ import {
   STUDENT_STATUSES,
   type Student,
 } from "@/types/student";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  FormActions,
   FormAlert,
   FormFull,
   FormGrid,
@@ -34,19 +32,27 @@ import {
 } from "@/lib/students/actions";
 
 type StudentFormProps = {
+  /** يُربط بأزرار Dialog footer عبر form={formId} */
+  formId: string;
   mode: "create" | "edit";
   student?: Student;
   onSuccess?: (student: Student) => void;
-  onCancel?: () => void;
+  /** يبلّغ الأب بحالة الحفظ لتعطيل أزرار الـ footer */
+  onPendingChange?: (pending: boolean) => void;
 };
 
 const initialState: StudentActionState = { success: false };
 
+/**
+ * محتوى النموذج فقط — بدون أزرار.
+ * الأزرار تُمرَّر عبر Dialog footer + attribute form={formId}.
+ */
 export function StudentForm({
+  formId,
   mode,
   student,
   onSuccess,
-  onCancel,
+  onPendingChange,
 }: StudentFormProps) {
   const { locale, t } = useLanguage();
   const action = mode === "create" ? createStudentAction : updateStudentAction;
@@ -58,6 +64,10 @@ export function StudentForm({
       onSuccess?.(state.student);
     }
   }, [state, onSuccess]);
+
+  useEffect(() => {
+    onPendingChange?.(pending);
+  }, [pending, onPendingChange]);
 
   const statusOptions = useMemo(
     () =>
@@ -96,35 +106,9 @@ export function StudentForm({
 
   return (
     <FormShell
+      id={formId}
       action={formAction}
       className="h-full min-h-0"
-      actions={
-        <FormActions>
-          {/* DOM: إلغاء ثم حفظ — flex-col-reverse يعرض الحفظ فوق الإلغاء على الموبايل */}
-          {onCancel ? (
-            <Button
-              type="button"
-              variant="secondary"
-              className="w-full sm:w-auto"
-              onClick={onCancel}
-              disabled={pending}
-            >
-              {t("cancel")}
-            </Button>
-          ) : null}
-          <Button
-            type="submit"
-            className="w-full sm:w-auto sm:min-w-[8.5rem]"
-            disabled={pending}
-          >
-            {pending
-              ? t("saving")
-              : mode === "create"
-                ? t("addStudent")
-                : t("save")}
-          </Button>
-        </FormActions>
-      }
     >
       {mode === "edit" && student ? (
         <input type="hidden" name="id" value={student.id} />
